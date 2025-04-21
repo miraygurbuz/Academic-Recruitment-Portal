@@ -1,4 +1,3 @@
-import React from 'react';
 import amblem from '/src/assets/amblem.svg';
 
 const Amblem = ({ size = 30 }) => {

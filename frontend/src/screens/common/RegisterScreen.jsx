@@ -4,8 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { useRegisterMutation } from '../../slices/usersApiSlice';
 import { setCredentials } from '../../slices/authSlice';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUser, faEnvelope, faLock, faIdCard, faCalendar, faArrowRight, faArrowLeft, faCheck } from '@fortawesome/free-solid-svg-icons';
+import { FaUser, FaEnvelope, FaLock, FaIdCard, FaCalendar, FaArrowRight, FaArrowLeft, FaCheck } from 'react-icons/fa'
 import { toast } from 'react-toastify';
 import Loader from '../../components/common/Loader';
 import FormContainer from '../../components/common/FormContainer';
@@ -133,8 +132,8 @@ const RegisterScreen = () => {
     };
 
     return (
-      <div className="mt-2">
-        <small className="d-flex justify-content-between">
+      <div className='mt-2'>
+        <small className='d-flex justify-content-between'>
           <span>Şifre Gücü: {getStrengthText()}</span>
         </small>
         <ProgressBar 
@@ -148,11 +147,11 @@ const RegisterScreen = () => {
   
   const renderProgressBar = () => {
     return (
-      <div className="mb-4">
+      <div className='mb-4'>
         <ProgressBar now={(formStep / 3) * 100}
         style={{ height: '8px' }}
-        variant="success" />
-        <div className="d-flex justify-content-between mt-1">
+        variant='success' />
+        <div className='d-flex justify-content-between mt-1'>
           <span className={`small ${formStep >= 1 ? 'text-dark' : 'text-muted'}`}>Kişisel Bilgiler</span>
           <span className={`small ${formStep >= 2 ? 'text-dark' : 'text-muted'}`}>Hesap Bilgileri</span>
           <span className={`small ${formStep >= 3 ? 'text-dark' : 'text-muted'}`}>Onay</span>
@@ -166,16 +165,16 @@ const RegisterScreen = () => {
       case 1:
         return (
           <>
-            <div className="text-center mb-4">
+            <div className='text-center mb-4'>
               <h2>Kişisel Bilgiler</h2>
-              <p className="text-muted">Adım 1/3</p>
+              <p className='text-muted'>Adım 1/3</p>
             </div>
             
             <Row>
               <Col md={6}>
                 <Form.Group className='mb-3' controlId='name'>
                   <Form.Label>
-                    <FontAwesomeIcon icon={faUser} className="me-2" />
+                    <FaUser className='me-2' />
                     Ad
                   </Form.Label>
                   <Form.Control
@@ -186,7 +185,7 @@ const RegisterScreen = () => {
                     required
                     
                   />
-                  <Form.Control.Feedback type="invalid">
+                  <Form.Control.Feedback type='invalid'>
                     Lütfen adınızı giriniz.
                   </Form.Control.Feedback>
                 </Form.Group>
@@ -194,7 +193,7 @@ const RegisterScreen = () => {
               <Col md={6}>
                 <Form.Group className='mb-3' controlId='surname'>
                   <Form.Label>
-                    <FontAwesomeIcon icon={faUser} className="me-2" />
+                    <FaUser className='me-2' />
                     Soyad
                   </Form.Label>
                   <Form.Control
@@ -205,7 +204,7 @@ const RegisterScreen = () => {
                     required
                     
                   />
-                  <Form.Control.Feedback type="invalid">
+                  <Form.Control.Feedback type='invalid'>
                     Lütfen soyadınızı giriniz.
                   </Form.Control.Feedback>
                 </Form.Group>
@@ -214,7 +213,7 @@ const RegisterScreen = () => {
 
             <Form.Group className='mb-3' controlId='tcKimlik'>
               <Form.Label>
-                <FontAwesomeIcon icon={faIdCard} className="me-2" />
+                <FaIdCard className='me-2' />
                 TC Kimlik Numarası
               </Form.Label>
               <Form.Control
@@ -224,17 +223,17 @@ const RegisterScreen = () => {
                 onChange={(e) => setTcKimlik(e.target.value.replace(/[^0-9]/g, ''))}
                 required
                 maxLength={11}
-                pattern="\d{11}"
+                pattern='\d{11}'
                 
               />
-              <Form.Control.Feedback type="invalid">
+              <Form.Control.Feedback type='invalid'>
                 TC Kimlik Numarası 11 haneli bir sayı olmalıdır.
               </Form.Control.Feedback>
             </Form.Group>
 
             <Form.Group className='mb-3' controlId='birthYear'>
               <Form.Label>
-                <FontAwesomeIcon icon={faCalendar} className="me-2" />
+                <FaCalendar className='me-2' />
                 Doğum Yılı
               </Form.Label>
               <Form.Control
@@ -244,20 +243,20 @@ const RegisterScreen = () => {
                 onChange={(e) => setBirthYear(e.target.value.replace(/[^0-9]/g, ''))}
                 required
                 maxLength={4}
-                pattern="\d{4}"
+                pattern='\d{4}'
                 
               />
-              <Form.Control.Feedback type="invalid">
+              <Form.Control.Feedback type='invalid'>
                 Doğum yılı 4 haneli bir sayı olmalıdır.
               </Form.Control.Feedback>
             </Form.Group>
             
-            <div className="d-flex justify-content-end mt-4">
+            <div className='d-flex justify-content-end mt-4'>
               <Button 
-                variant="dark" 
+                variant='dark' 
                 onClick={nextStep}
               >
-                İleri <FontAwesomeIcon icon={faArrowRight} className="ms-1" />
+                İleri <FaArrowRight className='ms-1' />
               </Button>
             </div>
           </>
@@ -266,14 +265,14 @@ const RegisterScreen = () => {
       case 2:
         return (
           <>
-            <div className="text-center mb-4">
+            <div className='text-center mb-4'>
               <h2>Hesap Bilgileri</h2>
-              <p className="text-muted">Adım 2/3</p>
+              <p className='text-muted'>Adım 2/3</p>
             </div>
             
             <Form.Group className='mb-3' controlId='email'>
               <Form.Label>
-                <FontAwesomeIcon icon={faEnvelope} className="me-2" />
+                <FaEnvelope className='me-2' />
                 Email Adresi
               </Form.Label>
               <Form.Control
@@ -284,14 +283,14 @@ const RegisterScreen = () => {
                 required
                 
               />
-              <Form.Control.Feedback type="invalid">
+              <Form.Control.Feedback type='invalid'>
                 Lütfen geçerli bir email adresi giriniz.
               </Form.Control.Feedback>
             </Form.Group>
 
             <Form.Group className='mb-3' controlId='password'>
               <Form.Label>
-                <FontAwesomeIcon icon={faLock} className="me-2" />
+                <FaLock className='me-2' />
                 Şifre
               </Form.Label>
               <Form.Control
@@ -303,14 +302,14 @@ const RegisterScreen = () => {
                 
               />
               {password && renderPasswordStrengthBar()}
-              <Form.Text className="text-muted">
+              <Form.Text className='text-muted'>
                 Şifreniz en az 8 karakter uzunluğunda olmalı ve büyük harf, rakam ve özel karakter içermelidir.
               </Form.Text>
             </Form.Group>
 
             <Form.Group className='mb-3' controlId='confirmPassword'>
               <Form.Label>
-                <FontAwesomeIcon icon={faLock} className="me-2" />
+                <FaLock className='me-2' />
                 Şifre Tekrar
               </Form.Label>
               <Form.Control
@@ -322,23 +321,23 @@ const RegisterScreen = () => {
                 
                 isInvalid={confirmPassword && password !== confirmPassword}
               />
-              <Form.Control.Feedback type="invalid">
+              <Form.Control.Feedback type='invalid'>
                 Şifreler eşleşmiyor.
               </Form.Control.Feedback>
             </Form.Group>
             
-            <div className="d-flex justify-content-between mt-4">
+            <div className='d-flex justify-content-between mt-4'>
               <Button 
-                variant="outline-secondary" 
+                variant='outline-secondary' 
                 onClick={prevStep}
               >
-                <FontAwesomeIcon icon={faArrowLeft} className="me-1" /> Geri
+                <FaArrowLeft className='me-1' /> Geri
               </Button>
               <Button 
-                variant="dark" 
+                variant='dark' 
                 onClick={nextStep}
               >
-                İleri <FontAwesomeIcon icon={faArrowRight} className="ms-1" />
+                İleri <FaArrowRight className='ms-1' />
               </Button>
             </div>
           </>
@@ -347,13 +346,13 @@ const RegisterScreen = () => {
       case 3:
         return (
           <>
-            <div className="text-center mb-4">
+            <div className='text-center mb-4'>
               <h2>Üyelik Tamamla</h2>
-              <p className="text-muted">Adım 3/3</p>
+              <p className='text-muted'>Adım 3/3</p>
             </div>
             
-            <div className="bg-light p-4 rounded-3 mb-4">
-              <h5 className="mb-3">Bilgilerinizi Kontrol Edin</h5>
+            <div className='bg-light p-4 rounded-3 mb-4'>
+              <h5 className='mb-3'>Bilgilerinizi Kontrol Edin</h5>
               <Row>
                 <Col md={6}>
                   <p><strong>Ad:</strong> {name}</p>
@@ -367,27 +366,27 @@ const RegisterScreen = () => {
               </Row>
             </div>
                      
-            <div className="d-flex justify-content-between mt-4">
+            <div className='d-flex justify-content-between mt-4'>
               <Button 
-                variant="outline-secondary" 
+                variant='outline-secondary' 
                 onClick={prevStep}
-                className="rounded-pill px-4"
+                className='rounded-pill px-4'
               >
-                <FontAwesomeIcon icon={faArrowLeft} className="me-1" /> Geri
+                <FaArrowLeft className='me-1' /> Geri
               </Button>
               <Button 
-                type="submit"
-                variant="success" 
-                className="rounded-pill px-4"
+                type='submit'
+                variant='success' 
+                className='rounded-pill px-4'
                 disabled={isLoading}
               >
-                <FontAwesomeIcon icon={faCheck} className="me-1" /> Kayıt Ol
+                <FaCheck className='me-1' /> Kayıt Ol
               </Button>
             </div>
             
             {isLoading && (
-              <div className="text-center mt-3">
-                <Loader />
+              <div className='text-center mt-3'>
+                <Loader buttonLoader/>
               </div>
             )}
           </>
@@ -399,20 +398,20 @@ const RegisterScreen = () => {
 
   return (
     <FormContainer>
-      <div className="text-center mb-4">
-        <h1 className="h2">Kayıt Ol</h1>
-        <p className="text-muted">Hesabınızı oluşturun.</p>
+      <div className='text-center mb-4'>
+        <h1 className='h2'>Kayıt Ol</h1>
+        <p className='text-muted'>Hesabınızı oluşturun.</p>
       </div>
       
       {renderProgressBar()}
 
-      <Form id="registerForm" noValidate validated={validated} onSubmit={submitHandler}>
+      <Form id='registerForm' noValidate validated={validated} onSubmit={submitHandler}>
         {renderFormStep()}
       </Form>
 
-      <div className="text-center mt-4">
-        <p className="mb-0">
-          Zaten hesabınız var mı? <Link to="/login" style={{ color: 'black' }}>Giriş yapın.</Link>
+      <div className='text-center mt-4'>
+        <p className='mb-0'>
+          Zaten hesabınız var mı? <Link to='/login' style={{ color: 'black' }}>Giriş yapın.</Link>
         </p>
       </div>
     </FormContainer>

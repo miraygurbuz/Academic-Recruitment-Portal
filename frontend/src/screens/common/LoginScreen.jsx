@@ -2,13 +2,12 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Form, Button, Row, Col, FormLabel, FormControl } from 'react-bootstrap';
 import { useDispatch, useSelector } from 'react-redux';
-import FormContainer from '../../components/common/FormContainer';
 import { useLoginMutation } from '../../slices/usersApiSlice';
 import { setCredentials } from '../../slices/authSlice';
 import { toast } from 'react-toastify';
+import { FaLock, FaIdCard } from 'react-icons/fa'
 import Loader from '../../components/common/Loader';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faLock, faIdCard } from '@fortawesome/free-solid-svg-icons';
+import FormContainer from '../../components/common/FormContainer';
 
 const LoginScreen = () => {
 
@@ -33,7 +32,6 @@ const LoginScreen = () => {
         try {
             const res = await login({ tcKimlik, password }).unwrap();
             dispatch(setCredentials({...res}))
-            navigate('/')
         } catch (err) {
             toast.error(err?.data?.message || err.error);
         }
@@ -50,12 +48,12 @@ const LoginScreen = () => {
         <FormContainer>
             <div className='text-center mb-4'>
                 <h1 className='h2'>Giriş Yap</h1>
-                <p className='text-muted'>Hoş geldiniz, giriş yapın</p>
+                <p className='text-muted'>Hoş geldiniz, giriş yapın.</p>
             </div>
 
             <Form onSubmit={submitHandler}>
                 <Form.Group className='my-2' controlId='tcKimlik'>
-                    <FontAwesomeIcon icon={faIdCard} className='me-2' />
+                    <FaIdCard className='me-2' />
                     <FormLabel>TC Kimlik Numarası</FormLabel>
                     <FormControl
                     type='text'
@@ -69,7 +67,7 @@ const LoginScreen = () => {
                 </Form.Group>
 
                 <Form.Group className='my-2' controlId='password'>
-                    <FontAwesomeIcon icon={faLock} className='me-2' />
+                    <FaLock className='me-2' />
                     <FormLabel>Şifre</FormLabel>
                     <FormControl
                     type='password'
@@ -81,7 +79,7 @@ const LoginScreen = () => {
                     </FormControl>
                 </Form.Group>
 
-                {isLoading && <Loader />}
+                {isLoading && <Loader buttonLoader/>}
 
                 <Button 
                     type='submit' 

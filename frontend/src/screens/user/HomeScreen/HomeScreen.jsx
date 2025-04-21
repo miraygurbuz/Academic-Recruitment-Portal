@@ -1,5 +1,7 @@
-import Hero from '../components/common/Hero'
+import './HomeScreen.css'
+import Hero from '../../../components/common/Hero';
 import { useSelector } from 'react-redux';
+import Jobs from '../../../components/common/Jobs';
 
 const HomeScreen = () => {
     const { userInfo } = useSelector((state) => state.auth);
@@ -7,11 +9,10 @@ const HomeScreen = () => {
     return (
         <>
             {!userInfo && <Hero />}
-            <div className='container'>
-                <h1 className='fw-bold mb-3'>İlanlar</h1>
-            </div>
+                <Jobs />
         </>
     );
 }
 
 export default HomeScreen;
+

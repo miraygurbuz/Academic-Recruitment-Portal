@@ -23,4 +23,13 @@ const protect = asyncHandler(async (req, res, next) => {
     }
 });
 
-export { protect };
+const admin = asyncHandler(async (req, res, next) => {
+    if (req.user && req.user.role === 'Admin' || req.user.role === 'Yönetici') {
+        next();
+    } else {
+        res.status(403);
+        throw new Error('Unauthorized.');
+    }
+});
+
+export { protect, admin };

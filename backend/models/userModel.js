@@ -29,6 +29,11 @@ const userSchema = mongoose.Schema({
         type: Number,
         required: true,
     },
+    role: {
+        type: String,
+        enum: ['Aday', 'Admin', 'Jüri Üyesi', 'Yönetici'],
+        default: 'Aday'
+    },
 }, {timestamps: true
 });
 

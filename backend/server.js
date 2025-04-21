@@ -6,6 +6,11 @@ import { notFound, errorHandler } from './middleware/errorMiddleware.js';
 import connectDB from './config/db.js';
 const port = process.env.PORT || 5000;
 import userRoutes from './routes/userRoutes.js'
+import academicFieldRoutes from './routes/academicFieldRoutes.js'
+import departmentRoutes from './routes/departmentRoutes.js'
+import jobRoutes from './routes/jobRoutes.js'
+import facultyRoutes from './routes/facultyRoutes.js'
+import applicationRoutes from './routes/applicationRoutes.js';
 
 connectDB();
 
@@ -17,6 +22,11 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 app.use('/api/users', userRoutes);
+app.use('/api/academic-fields', academicFieldRoutes);
+app.use('/api/faculties', facultyRoutes);
+app.use('/api/jobs', jobRoutes);
+app.use('/api/departments', departmentRoutes);
+app.use('/api/applications', applicationRoutes);
 
 app.get('/', (req, res) => res.send('Server is ready'));
 

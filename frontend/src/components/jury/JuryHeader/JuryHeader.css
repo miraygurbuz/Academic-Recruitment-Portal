@@ -1,0 +1,235 @@
+.navbar-jury {
+    background: linear-gradient(135deg, #27153f 0%, #371a55 50%, #2b0f38 100%);
+    transition: all 0.3s ease;
+    border-bottom: 2px solid rgba(155, 41, 255, 0.3);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5), 0 1px 0 rgba(41, 128, 255, 0.1);
+    height: px;
+    display: flex;
+    padding: 0;
+    justify-content: space-between;
+}
+
+.brand-container {
+    display: flex;
+    align-items: center;
+}
+
+.brand-container:hover {
+    transform: scale(1.05);
+}
+
+.brand-icon-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    padding: 3px;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.brand-container:hover .brand-icon-container {
+    background-color: rgba(255, 255, 255, 0.3);
+}
+
+.brand-text {
+    font-size: 1.5rem;
+    letter-spacing: 0.5px;
+    color: white;
+    transition: color 0.3s ease;
+}
+
+.jury-toggler {
+    border: none !important;
+    padding: 0.25rem 0.75rem;
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.jury-toggler:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+.jury-toggler:focus {
+    box-shadow: 0 0 0 3px rgba(112, 41, 255, 0.5);
+}
+
+.nav-links {
+    display: flex;
+    align-items: center;
+}
+
+.nav-link-jury {
+    color: rgba(255, 255, 255, 0.9) !important;
+    font-weight: 500;
+    padding: 0.5rem 1rem !important;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    margin: 0 3px;
+    position: relative;
+}
+
+.nav-icon-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.nav-link-jury:hover {
+    color: white !important;
+    background-color: rgba(255, 255, 255, 0.1);
+    transform: translateY(-2px);
+}
+
+.nav-link-jury-fade::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    width: 0;
+    height: 2px;
+    background: #8c39de;
+    transition: all 0.3s ease;
+    transform: translateX(-50%);
+}
+
+.nav-link-fade:hover::after {
+    width: 70%;
+}
+
+.vertical-divider {
+    width: 1px;
+    height: 30px;
+    background-color: rgba(255, 255, 255, 0.2);
+    margin: 0 10px;
+}
+
+.jury-avatar-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.jury-avatar-circle {
+    width: 32px;
+    height: 32px;
+    background: #8c39de;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    transition: all 0.3s ease;
+}
+
+.jury-name {
+    font-size: 0.95rem;
+    color: white;
+}
+
+.jury-role {
+    font-size: 0.75rem;
+    opacity: 0.7;
+}
+
+.dropdown-jury .dropdown-toggle {
+    padding: 0.5rem 1rem !important;
+    border-radius: 4px;
+    color: rgba(255, 255, 255, 0.9) !important;
+    transition: all 0.2s ease;
+}
+
+.dropdown-jury .dropdown-toggle:hover {
+    color: white !important;
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.dropdown-jury .dropdown-menu {
+    background-color: #3b1a55;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-top: 10px;
+    animation: dropdown-fade 0.3s ease;
+}
+
+@keyframes dropdown-fade {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.dropdown-item-jury {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 1.5rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.dropdown-item-jury:hover {
+    background-color: rgba(255, 255, 255, 0.371);
+    color: rgb(0, 0, 0) !important;
+}
+
+.dropdown-item-jury:active,
+.dropdown-item-jury:focus {
+    background-color: rgba(255, 255, 255, 0.371);
+    color: white !important;
+}
+
+.dropdown-icon {
+    transition: transform 0.2s ease;
+}
+
+.dropdown-item-jury:hover .dropdown-icon {
+    transform: translateX(3px);
+}
+
+.dropdown-jury .dropdown-divider {
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    margin: 4px 0;
+}
+
+.btn-nav-jury {
+    background-color: #9629cc;
+    color: white !important;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+}
+
+.btn-nav-jury:hover {
+    background-color: rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+@media (max-width: 991.98px) {
+    .nav-links {
+        padding-top: 1rem;
+    }
+    
+    .nav-link-jury, .dropdown-jury .dropdown-toggle {
+        padding: 0.75rem 1rem !important;
+        margin: 5px 0;
+    }
+    
+    .dropdown-menu {
+        background-color: rgba(0, 0, 0, 0.05);
+        border: none;
+        border-radius: 4px;
+    }
+    
+    .dropdown-jury {
+        margin-top: 5px;
+    }
+}

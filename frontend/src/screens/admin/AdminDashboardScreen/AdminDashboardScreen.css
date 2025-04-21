@@ -1,0 +1,146 @@
+.dashboard-title {
+    color: #333;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+    border-left: 4px solid #1a3a55;
+    padding-left: 15px;
+  }
+  
+  .dashboard-card {
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  
+  .dashboard-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+  }
+  
+  .card-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 50px;
+    height: 50px;
+    border-radius: 10px;
+    color: white;
+    font-size: 1.5rem;
+  }
+  
+  .card-title {
+    font-weight: 700;
+    font-size: 2rem;
+    color: #333;
+  }
+  
+  .card-subtitle {
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .bg-info {
+    background-color: #3498db;
+  }
+  
+  .bg-success {
+    background-color: #2ecc71;
+  }
+  
+  .bg-warning {
+    background-color: #f39c12;
+  }
+  
+  .bg-danger {
+    background-color: #e74c3c;
+  }
+  
+  .floating-action-button {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #1a3a55 0%, #2970cc 100%);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    z-index: 1000;
+  }
+  
+  .floating-action-button:hover {
+    transform: scale(1.1) rotate(90deg);
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.4);
+  }
+  
+  .floating-action-button:active {
+    transform: scale(0.95);
+  }
+  
+  .table {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  
+  .table thead th {
+    font-weight: 600;
+    padding: 12px 15px;
+    border-bottom-width: 1px;
+  }
+  
+  .table tbody td {
+    padding: 12px 15px;
+    vertical-align: middle;
+  }
+  
+  .table tr {
+    transition: background-color 0.2s;
+  }
+  
+  .table tr:hover {
+    background-color: #f8f9fa;
+  }
+  
+  .table .btn {
+    white-space: nowrap;
+  }
+  
+  .badge {
+    font-weight: 500;
+    padding: 0.4em 0.7em;
+  }
+  
+  .btn-light {
+    color: #495057;
+    border: 1px solid #dee2e6;
+  }
+  
+  .btn-light:hover {
+    background-color: #e9ecef;
+  }
+  
+  @media (max-width: 768px) {
+    .card-icon {
+      width: 40px;
+      height: 40px;
+      font-size: 1.2rem;
+    }
+    
+    .card-title {
+      font-size: 1.5rem;
+    }
+    
+    .floating-action-button {
+      width: 50px;
+      height: 50px;
+      font-size: 20px;
+    }
+  }
