@@ -49,12 +49,6 @@ class ErrorBoundary extends Component {
                   )}
                   <div className='mt-4'>
                     <Button 
-                      variant='success' 
-                      onClick={() => window.location.href = '/admin/jobs'}
-                    >
-                      Geri Dön
-                    </Button>
-                    <Button 
                       variant='outline-secondary' 
                       className='ms-2'
                       onClick={() => window.location.reload()}

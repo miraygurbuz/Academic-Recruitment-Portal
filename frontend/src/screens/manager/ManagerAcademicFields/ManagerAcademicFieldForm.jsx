@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Container, Form, Button, Card, Alert, Row, Col, Tab, Nav, Table } from 'react-bootstrap';
-import { FaSave, FaArrowLeft } from 'react-icons/fa';
+import { FaSave } from 'react-icons/fa';
 import { 
   useGetAcademicFieldByIdQuery, 
   useUpdateAcademicFieldMutation,
@@ -15,6 +15,7 @@ import {
 } from '../../../constants/categories';
 import { toast } from 'react-toastify';
 import Loader from '../../../components/common/Loader';
+import BackButton from '../../../components/common/BackButton';
 
 const RANKS = [
   { id: 'drOgrUyesiCriteria', title: 'Dr. Öğr. Üyesi' },
@@ -164,9 +165,7 @@ const AcademicFieldEditForm = () => {
   if (isError) return (
     <Container className='mt-4'>
       <Alert variant='danger'>Hata: {error?.data?.message || 'Bilinmeyen hata'}</Alert>
-      <Button variant='secondary' onClick={() => navigate('/manager/academic-fields')}>
-        <FaArrowLeft /> Geri Dön
-      </Button>
+      <BackButton />
     </Container>
   );
   
@@ -174,12 +173,7 @@ const AcademicFieldEditForm = () => {
     <Container className='mt-4'>
       <div className='d-flex justify-content-between align-items-center mb-4'>
         <h1 className='h2'>Akademik Alan Düzenleme</h1>
-        <Button 
-          variant='secondary' 
-          onClick={() => navigate('/manager/academic-fields')}
-        >
-          <FaArrowLeft /> Geri Dön
-        </Button>
+        <BackButton />
       </div>
       
       <Form onSubmit={handleSubmit}>

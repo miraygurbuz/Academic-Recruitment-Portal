@@ -6,7 +6,7 @@ import { useGetApplicationsQuery } from '../../../slices/applicationsApiSlice';
 import AdminJobsScreen from '../AdminJobsScreen';
 import './AdminDashboardScreen.css';
 
-const DashboardScreen = () => {
+const AdminDashboardScreen = () => {
   const navigate = useNavigate();
 
   const {
@@ -128,4 +128,4 @@ const totalApplications = applicationsData?.totalApplications || 0;
   );
 };
 
-export default DashboardScreen;
+export default AdminDashboardScreen;

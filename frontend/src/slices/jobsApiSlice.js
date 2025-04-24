@@ -11,7 +11,7 @@ export const jobsApiSlice = apiSlice.injectEndpoints({
             }),
             providesTags: ['Job']
         }),
-        
+
         getActiveJobs: builder.query({
             query: () => ({
                 url: `${JOBS_URL}/active`,
@@ -19,7 +19,7 @@ export const jobsApiSlice = apiSlice.injectEndpoints({
             }),
             providesTags: ['Job']
         }),
-        
+
         getJobById: builder.query({
             query: (id) => ({
                 url: `${JOBS_URL}/${id}`,
@@ -27,7 +27,7 @@ export const jobsApiSlice = apiSlice.injectEndpoints({
             }),
             providesTags: (result, error, id) => [{ type: 'Job', id }]
         }),
-        
+
         getJobsByDepartment: builder.query({
             query: (departmentId) => ({
                 url: `${JOBS_URL}/department/${departmentId}`,
@@ -35,7 +35,7 @@ export const jobsApiSlice = apiSlice.injectEndpoints({
             }),
             providesTags: ['Job']
         }),
-        
+
         createJob: builder.mutation({
             query: (data) => ({
                 url: JOBS_URL,
@@ -44,7 +44,7 @@ export const jobsApiSlice = apiSlice.injectEndpoints({
             }),
             invalidatesTags: ['Job']
         }),
-        
+
         updateJob: builder.mutation({
             query: ({ id, ...data }) => ({
                 url: `${JOBS_URL}/${id}`,
@@ -53,7 +53,7 @@ export const jobsApiSlice = apiSlice.injectEndpoints({
             }),
             invalidatesTags: (result, error, { id }) => [{ type: 'Job', id }, 'Job']
         }),
-        
+
         updateJobStatus: builder.mutation({
             query: ({ id, status }) => ({
                 url: `${JOBS_URL}/${id}/status`,
@@ -62,14 +62,38 @@ export const jobsApiSlice = apiSlice.injectEndpoints({
             }),
             invalidatesTags: (result, error, { id }) => [{ type: 'Job', id }, 'Job']
         }),
-        
+
         deleteJob: builder.mutation({
             query: (id) => ({
                 url: `${JOBS_URL}/${id}`,
                 method: 'DELETE'
             }),
             invalidatesTags: ['Job']
-        })
+        }),
+
+        getJobJuryMembers: builder.query({
+            query: (id) => ({
+              url: `${JOBS_URL}/${id}/jurymembers`,
+              method: 'GET'
+            }),
+            providesTags: ['JobJury']
+          }),
+          
+          assignJuryMembers: builder.mutation({
+            query: ({ id, juryMemberIds }) => ({
+              url: `${JOBS_URL}/${id}/jurymembers`,
+              method: 'PUT',
+              body: { juryMemberIds }
+            }),
+            invalidatesTags: ['JobJury', 'Job']
+          }),
+
+          clearJuryMembers: builder.mutation({
+            query: (id) => ({
+              url: `${JOBS_URL}/${id}/jurymembers`,
+              method: 'DELETE'
+            }),
+          }),
     })
 });
 
@@ -81,5 +105,8 @@ export const {
     useCreateJobMutation,
     useUpdateJobMutation,
     useUpdateJobStatusMutation,
-    useDeleteJobMutation
+    useDeleteJobMutation,
+    useGetJobJuryMembersQuery,
+    useAssignJuryMembersMutation,
+    useClearJuryMembersMutation
 } = jobsApiSlice;

@@ -1,56 +1,25 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Container, Row, Col, Table, Button, Badge, Dropdown, Card, Alert, Modal, Spinner } from 'react-bootstrap';
-import { FaEye, FaFilter, FaSignOutAlt } from 'react-icons/fa';
-import { useGetJobApplicationsQuery, useDeleteApplicationMutation } from '../../../slices/applicationsApiSlice';
-import { useGetJobByIdQuery } from '../../../slices/jobsApiSlice';
-import { formatDate } from '../../../utils/helpers';
-import { toast } from 'react-toastify';
-import BackButton from '../../common/BackButton';
-import { getStatusBadge, getPositionBadge } from '../../../utils/badges';
+import { FaEye, FaFilter } from 'react-icons/fa';
+import { useGetJobApplicationsQuery} from '../../slices/applicationsApiSlice';
+import { useGetJobByIdQuery } from '../../slices/jobsApiSlice';
+import { formatDate } from '../../utils/helpers';
+import BackButton from '../../components/common/BackButton';
+import { getStatusBadge, getPositionBadge } from '../../utils/badges';
+import Loader from '../../components/common/Loader';
 
 const JobApplicationsList = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [statusFilter, setStatusFilter] = useState('Tümü');
   const [searchTerm, setSearchTerm] = useState('');
-  
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [applicationToDelete, setApplicationToDelete] = useState(null);
-  
   const { data: jobData, isLoading: isJobLoading } = useGetJobByIdQuery(id);
-  
   const { data: applicationsData, isLoading: isApplicationsLoading, isError, error, refetch } = useGetJobApplicationsQuery(id);
-  
-  const [deleteApplication, { isLoading: isDeleting }] = useDeleteApplicationMutation();
-  
   const isLoading = isJobLoading || isApplicationsLoading;
   
   const handleViewApplication = (applicationId) => {
-    navigate(`/admin/applications/${applicationId}`);
-  };
-  
-  const handleGoBack = () => {
-    navigate('/admin/jobs');
-  };
-
-  const handleShowDeleteModal = (application) => {
-    setApplicationToDelete(application);
-    setShowDeleteModal(true);
-  };
-  
-  const handleDeleteConfirm = async () => {
-    if (!applicationToDelete) return;
-    
-    try {
-      await deleteApplication(applicationToDelete._id).unwrap();
-      setShowDeleteModal(false);
-      refetch();
-      toast.success('Başvuru başarıyla silindi.');
-    } catch (err) {
-      toast.error(`Başvuru silinirken hata: ${err.message || 'Bilinmeyen hata'}`);
-      setShowDeleteModal(false);
-    }
+    navigate(`/manager/applications/${applicationId}`);
   };
   
   const applications = applicationsData?.applications || [];
@@ -66,8 +35,7 @@ const JobApplicationsList = () => {
   if (isLoading) {
     return (
       <Container className='mt-4 text-center'>
-        <Spinner animation='border' variant='success' />
-        <p>Veriler yükleniyor...</p>
+        <Loader />
       </Container>
     );
   }
@@ -92,7 +60,7 @@ const JobApplicationsList = () => {
   return (
     <Container fluid className='mt-4 mb-5'>
       <div className='mb-4'>
-      <BackButton />
+        <BackButton />
         <div className='text-center'>
           <h1 className='h2'>İlan Başvuruları</h1>
           <p className='lead'>
@@ -193,16 +161,6 @@ const JobApplicationsList = () => {
                           >
                             <FaEye />
                           </Button>
-                          {application.status === 'Beklemede' && (
-                            <Button 
-                              size='sm' 
-                              variant='outline-danger'
-                              onClick={() => handleShowDeleteModal(application)}
-                              title='Başvuruyu Sil'
-                            >
-                              <FaSignOutAlt />
-                            </Button>
-                          )}
                         </div>
                       </td>
                     </tr>
@@ -219,42 +177,6 @@ const JobApplicationsList = () => {
           )}
         </Card.Body>
       </Card>
-      
-      <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)}>
-        <Modal.Header closeButton>
-          <Modal.Title>Başvuruyu Sil</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <p>
-            <strong>
-              {applicationToDelete?.candidateId?.name} {applicationToDelete?.candidateId?.surname}
-            </strong> 
-            {' '}adayının başvurusunu silmek istediğinize emin misiniz?
-          </p>
-          <p className='text-danger'>
-            Bu işlem geri alınamaz.
-          </p>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant='secondary' onClick={() => setShowDeleteModal(false)}>
-            İptal
-          </Button>
-          <Button 
-            variant='danger' 
-            onClick={handleDeleteConfirm}
-            disabled={isDeleting}
-          >
-            {isDeleting ? (
-              <>
-                <Spinner as='span' animation='border' size='sm' className='me-2' />
-                Siliniyor...
-              </>
-            ) : (
-              'Evet, Sil'
-            )}
-          </Button>
-        </Modal.Footer>
-      </Modal>
     </Container>
   );
 };

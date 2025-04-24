@@ -1,22 +1,19 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Container, Card, Button, Row, Col, Badge, Spinner, Alert, Tooltip, OverlayTrigger } from 'react-bootstrap';
-import { FaShareAlt, FaCheck } from 'react-icons/fa';
-import { useGetJobByIdQuery } from '../../slices/jobsApiSlice';
+import { Container, Card, Button, Row, Col, Alert, Tooltip, OverlayTrigger } from 'react-bootstrap';
+import { FaShareAlt, FaCheck, FaUserEdit } from 'react-icons/fa';
+import { useGetJobByIdQuery, useGetJobJuryMembersQuery } from '../../slices/jobsApiSlice';
 import { formatDate } from '../../utils/helpers';
 import BackButton from '../../components/common/BackButton';
 import { getStatusBadge } from '../../utils/badges';
+import Loader from '../../components/common/Loader';
 
-const AdminJobDetailsScreen = () => {
+const ManagerJobDetailsScreen = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const [copied, setCopied] = useState(false);
-    
     const { data: job, isLoading, error } = useGetJobByIdQuery(id);
-    
-    const handleEdit = () => {
-        navigate(`/admin/jobs/${id}/edit`);
-    };
+    const { data: juryMembers, isLoading: isJuryLoading } = useGetJobJuryMembersQuery(id);
     
     const handleShareUrl = () => {
         const currentUrl = window.location.href;
@@ -45,12 +42,11 @@ const AdminJobDetailsScreen = () => {
         }
     };
     
-    if (isLoading) {
+    if (isLoading || isJuryLoading) {
         return (
             <Container className='d-flex justify-content-center align-items-center' style={{ minHeight: '100vh' }}>
                 <div className='text-center'>
-                    <Spinner animation='border' variant='success' />
-                    <p className='mt-2'>İlan bilgileri yükleniyor...</p>
+                    <Loader />
                 </div>
             </Container>
         );
@@ -151,13 +147,49 @@ const AdminJobDetailsScreen = () => {
                     
                     <Row className='mb-3'>
                         <Col xs={12} md={5}>
-                            <strong>İlan Başlangıç:</strong> {formatDate(job.startDate)}
+                            <strong>İlan Başlangıç:</strong> {formatDate(job.startDate, false)}
                         </Col>
                         <Col xs={12} md={2} className='d-none d-md-block'></Col>
                         <Col xs={12} md={5} className='text-md-end'>
-                            <strong>Son Başvuru:</strong> {formatDate(job.endDate)}
+                            <strong>Son Başvuru:</strong> {formatDate(job.endDate, false)}
                         </Col>
                     </Row>
+
+                    <hr />
+
+                    <div className='mb-4'>
+                        <div className='d-flex justify-content-between align-items-center mb-3'>
+                            <h5 className='fw-bold m-0'>Jüri Üyeleri</h5>
+                            {isActive && (
+                                <Button 
+                                    variant='outline-primary' 
+                                    size='sm'
+                                    onClick={() => navigate(`/manager/jobs/${id}/jury`)}
+                                >
+                                    <FaUserEdit className='me-1' /> {juryMembers && juryMembers.length > 0 ? 'Düzenle' : 'Jüri Ata'}
+                                </Button>
+                            )}
+                        </div>
+                        
+                        {juryMembers && juryMembers.length > 0 ? (
+                            <div className='border rounded p-2'>
+                                {juryMembers.map((jury, index) => (
+                                    <div key={index} className={`d-flex align-items-center py-2 ${index !== juryMembers.length - 1 ? 'border-bottom' : ''}`}>
+                                        <div className='ms-2'>
+                                            <div className='fw-bold'>{jury.user.name} {jury.user.surname}</div>
+                                            <div className='text-muted small'>
+                                                {jury.user.department?.name || 'Departman Bilgisi Yok'} • {jury.user.email}
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className='border rounded p-3 text-center bg-light'>
+                                <p className='mb-0 text-muted'>Bu ilan için henüz jüri üyesi atanmamış.</p>
+                            </div>
+                        )}
+                    </div>
 
                     <hr />
 
@@ -172,19 +204,9 @@ const AdminJobDetailsScreen = () => {
                         <p className='text-muted'>Gerekli belgeler belirtilmemiş.</p>
                     )}                                    
                 </Card.Body>
-
-                <div className='position-sticky bottom-0 bg-white text-center p-3 border-top' style={{ width: '100%' }}>
-                    <Button 
-                        variant='success' 
-                        className='w-100' 
-                        onClick={handleEdit}
-                    >
-                        İlanı Düzenle
-                    </Button>
-                </div>
             </Card>
         </Container>
     );
 };
 
-export default AdminJobDetailsScreen;
+export default ManagerJobDetailsScreen;

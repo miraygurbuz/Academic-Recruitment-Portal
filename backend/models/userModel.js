@@ -34,6 +34,11 @@ const userSchema = mongoose.Schema({
         enum: ['Aday', 'Admin', 'Jüri Üyesi', 'Yönetici'],
         default: 'Aday'
     },
+    department: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Department',
+        required: false
+    },
 }, {timestamps: true
 });
 

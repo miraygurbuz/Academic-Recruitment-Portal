@@ -79,7 +79,24 @@ const getAllApplications = asyncHandler(async (req, res) => {
     try {
         const applications = await Application.find()
             .populate('candidateId', 'name surname email')
-            .populate('jobId', 'title department')
+            .populate({
+                path: 'jobId',
+                select: 'title department juryMembers status',
+                populate: [
+                    {
+                        path: 'department',
+                        select: 'name'
+                    },
+                    {
+                        path: 'juryMembers.user',
+                        select: 'name surname email department', 
+                        populate: {
+                            path: 'department',
+                            select: 'name'
+                        }
+                    }
+                ]
+            })
             .populate('academicFieldId', 'name');
 
         const totalApplications = await Application.countDocuments();
@@ -105,7 +122,7 @@ const getPendingApplicationCount = asyncHandler(async (req, res) => {
   });
 
 // @route   GET /api/applications/:id
-// @access  Private/Admin, Owner
+// @access  Private/Admin, Owner, Yönetici
 const getApplicationById = asyncHandler(async (req, res) => {
     const { id } = req.params;
 
@@ -114,27 +131,42 @@ const getApplicationById = asyncHandler(async (req, res) => {
         throw new Error('Geçersiz başvuru ID\'si');
     }
 
-    const application = await Application.findById(id)
+    const includeDetails = req.query.includeDetails === 'true';
+
+    let query = Application.findById(id)
         .populate('candidateId', 'name surname email tcKimlik')
         .populate({
             path: 'jobId',
-            select: 'title department',
+            select: 'title department faculty',
             populate: {
                 path: 'department',
-                select: 'name'
+                select: 'name faculty'
             }
         })
         .populate('academicFieldId', 'name');
+
+    if (includeDetails) {
+        query = query
+            .populate('publications')
+            .populate('citations')
+            .populate('projects')
+            .populate('theses')
+            .populate('pointsSummary');
+    }
+
+    const application = await query;
 
     if (!application) {
         res.status(404);
         throw new Error('Başvuru bulunamadı');
     }
 
-    if (req.user.role !== 'Admin' && application.candidateId._id.toString() !== req.user._id.toString()) {
+    if (req.user.role !== 'Admin' && 
+        req.user.role !== 'Yönetici' && 
+        application.candidateId._id.toString() !== req.user._id.toString()) {
         res.status(403);
         throw new Error('Bu başvuruyu görüntüleme yetkiniz yok');
-      }
+    }
 
     res.json(application);
 });
@@ -232,6 +264,54 @@ const deleteApplication = asyncHandler(async (req, res) => {
     });
 });
 
+// @route   PUT /api/applications/:id
+// @access  Private/Admin, Yönetici
+const updateApplication = asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+        res.status(400);
+        throw new Error('Geçersiz başvuru ID\'si');
+    }
+
+    const application = await Application.findById(id);
+
+    if (!application) {
+        res.status(404);
+        throw new Error('Başvuru bulunamadı');
+    }
+
+    if (req.user.role !== 'Admin' && req.user.role !== 'Yönetici') {
+        res.status(403);
+        throw new Error('Bu işlemi gerçekleştirme yetkiniz yok');
+    }
+    if (status) {
+        const validStatuses = ['Beklemede', 'Onaylandı', 'Reddedildi'];
+        if (!validStatuses.includes(status)) {
+            res.status(400);
+            throw new Error('Geçersiz başvuru durumu');
+        }
+
+        if (application.status === 'Onaylandı' || application.status === 'Reddedildi') {
+            res.status(400);
+            throw new Error('Başvuru onay/ret işlemleri tamamlandığından değişiklik yapamazsınız');
+        }
+
+        application.status = status;
+        
+        if (status === 'Onaylandı' || status === 'Reddedildi') {
+            application.completedAt = new Date();
+        }
+    }
+    await application.calculatePoints();
+    await application.checkCriteria();
+
+    const updatedApplication = await application.save();
+
+    res.json(updatedApplication);
+});
+
 export { 
     createApplication, 
     getMyApplications,
@@ -241,5 +321,6 @@ export {
     checkApplicationCriteria,
     getJobApplications,
     getPendingApplicationCount,
-    deleteApplication
+    deleteApplication,
+    updateApplication
 };

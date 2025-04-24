@@ -74,11 +74,11 @@ const ManagerHeader = () => {
                                 </div>
                                 <span>Kriter Yönetimi</span>
                             </Nav.Link>
-                            <Nav.Link as={Link} to='/manager/home' className='nav-link-manager mx-2 d-flex align-items-center'>
+                            <Nav.Link as={Link} to='/manager/jobs' className='nav-link-manager mx-2 d-flex align-items-center'>
                                 <div className="nav-icon-container me-2">
                                     <FaUsers />
                                 </div>
-                                <span>Kullanıcı Yönetimi</span>
+                                <span>İlan Yönetimi & Jüri Ataması</span>
                             </Nav.Link>
                             
                             <div className="vertical-divider d-none d-lg-block"></div>

@@ -8,13 +8,15 @@ import {
     checkApplicationCriteria,
     getJobApplications,
     getPendingApplicationCount,
-    deleteApplication
+    deleteApplication,
+    updateApplication
 } from '../controllers/applicationController.js';
 import { protect, admin } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
 router.post('/', protect, createApplication);
+router.put('/:id', protect, updateApplication);
 router.get('/my', protect, getMyApplications);
 router.get('/applications', protect, admin, getAllApplications);
 router.get('/:id', protect, getApplicationById);

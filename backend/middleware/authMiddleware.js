@@ -32,4 +32,13 @@ const admin = asyncHandler(async (req, res, next) => {
     }
 });
 
-export { protect, admin };
+const jury = asyncHandler(async (req, res, next) => {
+    if (req.user && req.user.role === 'Jüri Üyesi') {
+        next();
+    } else {
+        res.status(403);
+        throw new Error('Unauthorized.');
+    }
+});
+
+export { protect, admin, jury };

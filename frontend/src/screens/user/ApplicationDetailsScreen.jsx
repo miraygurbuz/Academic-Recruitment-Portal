@@ -5,11 +5,12 @@ import { useGetApplicationByIdQuery } from '../../slices/applicationsApiSlice';
 import { useGetJobByIdQuery } from '../../slices/jobsApiSlice';
 import { useGetFacultyByIdQuery, useGetDepartmentByIdQuery } from '../../slices/fieldsApiSlice';
 import Loader from '../../components/common/Loader';
+import BackButton from '../../components/common/BackButton';
+import { getStatusBadge } from '../../utils/badges';
 
 const ApplicationDetailsScreen = () => {
   const { id } = useParams();
-  const navigate = useNavigate();
-  
+ 
   const { 
     data: application, 
     isLoading: isLoadingApplication, 
@@ -40,29 +41,11 @@ const ApplicationDetailsScreen = () => {
         <Alert.Heading>Başvuru bilgileri alınamadı!</Alert.Heading>
         <p>{applicationError?.data?.message || 'Bilinmeyen hata'}</p>
         <div className="mt-3">
-          <Button 
-            variant="outline-danger" 
-            onClick={() => navigate('/my-applications')}
-          >
-            <FaArrowLeft className="me-2" /> Başvurularıma Geri Dön
-          </Button>
+        <BackButton />
         </div>
       </Alert>
     </Container>
   );
-  
-  const getStatusBadge = (status) => {
-    switch(status) {
-      case 'Beklemede':
-        return <Badge bg="warning">Beklemede</Badge>;
-      case 'Onaylandı':
-        return <Badge bg="success">Onaylandı</Badge>;
-      case 'Reddedildi':
-        return <Badge bg="danger">Reddedildi</Badge>;
-      default:
-        return <Badge bg="secondary">{status}</Badge>;
-    }
-  };
   
   const renderDataTable = (data, columns, emptyMessage) => {
     if (!data || data.length === 0) {
@@ -103,13 +86,7 @@ const ApplicationDetailsScreen = () => {
     <Container className="mt-4 mb-5">
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h1 className="h2">Başvuru Özeti</h1>
-        <Button 
-          variant="secondary" 
-          onClick={() => navigate('/my-applications')}
-          className="d-flex align-items-center"
-        >
-          <FaArrowLeft className="me-2" /> Başvurularıma Geri Dön
-        </Button>
+        <BackButton />
       </div>
       
       <Card className="mb-4 shadow-sm">

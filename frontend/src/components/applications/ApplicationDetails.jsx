@@ -1,24 +1,26 @@
 import { useState } from 'react';
-import { Container, Row, Col, Card, Table, Badge, Button, Tabs, Tab, Alert, Spinner } from 'react-bootstrap';
-import { FaArrowLeft } from 'react-icons/fa';
-import { useNavigate, Link } from 'react-router-dom';
+import { Container, Row, Col, Card, Table, Badge, Button, Tabs, Tab, Alert } from 'react-bootstrap';
+import { Link } from 'react-router-dom';
 import { 
   useGetApplicationByIdQuery, 
   useCalculateApplicationPointsQuery,
   useCheckApplicationCriteriaQuery 
 } from '../../slices/applicationsApiSlice';
+import ApplicationStatusActions from './ApplicationStatusActions';
 import { toast } from 'react-toastify';
+import { useSelector } from 'react-redux';
+import BackButton from '../../components/common/BackButton';
+import Loader from '../common/Loader';
 
 const ApplicationDetails = ({ applicationId, onBack }) => {
   const id = applicationId;
-  const navigate = useNavigate();
-  
+  const { userInfo } = useSelector((state) => state.auth);
   const [activeTab, setActiveTab] = useState('overview');
-
   const { data: application, isLoading, refetch, error } = useGetApplicationByIdQuery(id);
   const { refetch: refetchPoints } = useCalculateApplicationPointsQuery(id);
   const { refetch: refetchCriteria } = useCheckApplicationCriteriaQuery(id);
-  
+  const canSeeJuryEvaluations = userInfo && ['Admin', 'Yönetici'].includes(userInfo.role);
+
   const recalculatePoints = async () => {
     try {
       await refetchPoints();
@@ -29,11 +31,22 @@ const ApplicationDetails = ({ applicationId, onBack }) => {
       toast.error('Bir hata oluştu');
     }
   };
+
+  const handleStatusChange = async (newStatus) => {
+    try {
+      await refetchPoints();
+      await refetchCriteria();
+      await refetch();
+      toast.success(`Başvuru durumu "${newStatus}" olarak güncellendi`);
+    } catch (error) {
+      toast.error('Başvuru güncellenirken bir hata oluştu');
+    }
+  };
   
   if (isLoading) {
     return (
       <Container className='d-flex justify-content-center mt-5'>
-        <Spinner animation='border' variant='success' />
+        <Loader />
       </Container>
     );
   }
@@ -60,9 +73,7 @@ const ApplicationDetails = ({ applicationId, onBack }) => {
     <Container className='mt-4 mb-5'>
       <Row className='mb-3'>
         <Col>
-          <Button variant='secondary' onClick={onBack || (() => navigate(-1))} className='my-4'>
-            <FaArrowLeft className='me-2' /> Geri Dön
-          </Button>
+        <BackButton />
           <h2 className='mb-0'>
             Başvuru Detayları - #{application._id.substring(0, 8)}
           </h2>
@@ -129,7 +140,10 @@ const ApplicationDetails = ({ applicationId, onBack }) => {
                           <tr>
                             <td className='fw-bold'>İlan:</td>
                             <td>
-                              <Link to={`/admin/jobs/${application.jobId?._id}`} className='text-success fw-bold'>
+                            <Link to={`/${userInfo?.role === 'Admin' ? 'admin' : 
+                                         userInfo?.role === 'Yönetici' ? 'manager' : 
+                                         userInfo?.role === 'Jüri Üyesi' ? 'jury' : 'admin'}/jobs/${application.jobId?._id}`} 
+                                    className='text-success fw-bold'>
                                 {application.jobId?.title || 'İlan bilgisi bulunamadı'}
                               </Link>
                             </td>
@@ -283,39 +297,46 @@ const ApplicationDetails = ({ applicationId, onBack }) => {
                     </Card.Body>
                   </Card>
                   
-                  <Card className='mb-3'>
-                    <Card.Header>Jüri Değerlendirmeleri</Card.Header>
-                    <Card.Body>
-                      {application.juryEvaluations && application.juryEvaluations.length > 0 ? (
-                        <Table responsive bordered size='sm'>
-                          <thead>
-                            <tr>
-                              <th>Jüri Üyesi</th>
-                              <th>Sonuç</th>
-                              <th>Değerlendirme Tarihi</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {application.juryEvaluations.map((evaluation, index) => (
-                              <tr key={index}>
-                                <td>{evaluation.juryMember?.name} {evaluation.juryMember?.surname}</td>
-                                <td>
-                                  <Badge 
-                                    bg={evaluation.result === 'Olumlu' ? 'success' : 'danger'}
-                                  >
-                                    {evaluation.result}
-                                  </Badge>
-                                </td>
-                                <td>{new Date(evaluation.evaluatedAt).toLocaleDateString('tr-TR')}</td>
+                  {canSeeJuryEvaluations && (
+                    <Card className='mb-3'>
+                      <Card.Header>Jüri Değerlendirmeleri</Card.Header>
+                      <Card.Body>
+                        {application.juryEvaluations && application.juryEvaluations.length > 0 ? (
+                          <Table responsive bordered size='sm'>
+                            <thead>
+                              <tr>
+                                <th>Jüri Üyesi</th>
+                                <th>Sonuç</th>
+                                <th>Değerlendirme Tarihi</th>
                               </tr>
-                            ))}
-                          </tbody>
-                        </Table>
-                      ) : (
-                        <Alert variant='info'>Jüri değerlendirmesi yapılmamış</Alert>
-                      )}
-                    </Card.Body>
-                  </Card>
+                            </thead>
+                            <tbody>
+                              {application.juryEvaluations.map((evaluation, index) => (
+                                <tr key={index}>
+                                  <td>{evaluation.juryMember?.name} {evaluation.juryMember?.surname}</td>
+                                  <td>
+                                    <Badge 
+                                      bg={evaluation.result === 'Olumlu' ? 'success' : 'danger'}
+                                    >
+                                      {evaluation.result}
+                                    </Badge>
+                                  </td>
+                                  <td>{new Date(evaluation.evaluatedAt).toLocaleDateString('tr-TR')}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </Table>
+                        ) : (
+                          <Alert variant='info'>Jüri değerlendirmesi yapılmamış</Alert>
+                        )}
+                      </Card.Body>
+                    </Card>
+                  )}
+                  
+                  <ApplicationStatusActions
+                    application={application} 
+                    userRole={userInfo.role}
+                    onStatusChange={handleStatusChange}/>
                 </Col>
               </Row>
             </Tab>

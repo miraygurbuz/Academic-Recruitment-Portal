@@ -1,5 +1,6 @@
 import asyncHandler from 'express-async-handler';
 import Job from '../models/jobModel.js';
+import User from '../models/userModel.js';
 
 // @route   GET /api/jobs
 // @access  Public
@@ -10,7 +11,7 @@ const getAllJobs = asyncHandler(async (req, res) => {
       path: 'faculty',
       populate: { path: 'academicField' }
     }
-  }).populate('createdBy', 'name email');
+  }).populate('createdBy', 'name surname');
   
   res.status(200).json(jobs);
 });
@@ -24,7 +25,7 @@ const getJobById = asyncHandler(async (req, res) => {
       path: 'faculty',
       populate: { path: 'academicField' }
     }
-  }).populate('createdBy', 'name email');
+  }).populate('createdBy', 'name surname');
   
   if (!job) {
     res.status(404);
@@ -107,7 +108,7 @@ const updateJob = asyncHandler(async (req, res) => {
 const updateJobStatus = asyncHandler(async (req, res) => {
   const { status } = req.body;
   
-  if (!['Aktif', 'Biten', 'Taslak'].includes(status)) {
+  if (!['Aktif', 'Biten', 'Taslak', 'Değerlendirme'].includes(status)) {
     res.status(400);
     throw new Error('Geçersiz durum değeri');
   }
@@ -139,6 +140,99 @@ const deleteJob = asyncHandler(async (req, res) => {
   res.status(200).json({ message: 'İş ilanı silindi' });
 });
 
+// @route   GET /api/jobs/:id/jurymembers
+// @access  Private/Admin,Yönetici
+const getJobJuryMembers = asyncHandler(async (req, res) => {
+  const job = await Job.findById(req.params.id)
+    .populate({
+      path: 'juryMembers.user',
+      select: 'name surname tcKimlik email department',
+      populate: { path: 'department', select: 'name' }
+    });
+  
+  if (!job) {
+    res.status(404);
+    throw new Error('İlan bulunamadı');
+  }
+  
+  res.status(200).json(job.juryMembers);
+});
+
+// @route   PUT /api/jobs/:id/jurymembers
+// @access  Private/Admin,Yönetici
+const assignJuryMembers = asyncHandler(async (req, res) => {
+  const { juryMemberIds } = req.body;
+  
+  if (!juryMemberIds || juryMemberIds.length < 3 || juryMemberIds.length > 5) {
+    res.status(400);
+    throw new Error('3 ile 5 arası jüri üyesi seçilmelidir');
+  }
+  
+  const job = await Job.findById(req.params.id).populate('department');
+  
+  if (!job) {
+    res.status(404);
+    throw new Error('İlan bulunamadı');
+  }
+
+  if (job.status !== 'Aktif') {
+    res.status(400);
+    throw new Error('Sadece aktif ilanlara jüri atama işlemi yapılabilir.');
+  }
+  
+  const juryMembers = await User.find({ 
+    _id: { $in: juryMemberIds },
+    role: 'Jüri Üyesi'
+  });
+  
+  if (juryMembers.length !== juryMemberIds.length) {
+    res.status(400);
+    throw new Error('Bazı jüri üyeleri bulunamadı veya jüri üyesi değil');
+  }
+  
+  const wrongDepartmentJuryMembers = juryMembers.filter(jury => 
+    jury.department.toString() !== job.department._id.toString()
+  );
+  
+  if (wrongDepartmentJuryMembers.length > 0) {
+    res.status(400);
+    throw new Error('Tüm jüri üyeleri ilanın açıldığı bölüme ait olmalıdır');
+  }
+  
+  job.juryMembers = juryMemberIds.map(id => ({ user: id }));
+  
+  await job.save();
+  
+  res.status(200).json({ 
+    message: 'Jüri ataması başarıyla yapıldı',
+    juryMembers: job.juryMembers 
+  });
+});
+
+// @route   DELETE /api/jobs/:id/jurymembers
+// @access  Private/Admin,Yönetici
+const clearJuryMembers = asyncHandler(async (req, res) => {
+  const job = await Job.findById(req.params.id);
+  
+  if (!job) {
+    res.status(404);
+    throw new Error('İlan bulunamadı');
+  }
+
+  if (job.status !== 'Aktif') {
+    res.status(400);
+    throw new Error('Sadece aktif ilanlara jüri atama işlemi yapılabilir.');
+  }
+  
+  job.juryMembers = [];
+  await job.save();
+  
+  res.status(200).json({
+    message: 'Jüri üyeleri başarıyla temizlendi',
+    juryMembers: []
+  });
+});
+
 export {
   getAllJobs,
   getJobById,
@@ -148,5 +242,8 @@ export {
   createJob,
   updateJob,
   updateJobStatus,
-  deleteJob
+  deleteJob,
+  assignJuryMembers,
+  getJobJuryMembers,
+  clearJuryMembers
 };

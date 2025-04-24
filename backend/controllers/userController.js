@@ -179,11 +179,73 @@ const getUserCount = asyncHandler(async (req, res) => {
   res.status(200).json({ count });
 });
 
+// @route   GET api/users
+// @access  Private/Admin,Yönetici
+const getUsers = asyncHandler(async (req, res) => {
+  const users = await User.find({}).populate('department');
+  
+  const userList = users.map(user => ({
+    _id: user._id,
+    name: user.name,
+    surname: user.surname,
+    email: user.email,
+    tcKimlik: user.tcKimlik,
+    role: user.role,
+    department: user.department,
+    createdAt: user.createdAt
+  }));
+  
+  res.status(200).json(userList);
+});
+
+// @route   PUT api/users/:id/role
+// @access  Private/Admin,Yönetici
+const updateUserRole = asyncHandler(async (req, res) => {
+  const { role, department } = req.body;
+  const user = await User.findById(req.params.id);
+  if (!user) {
+    res.status(404);
+    throw new Error('Kullanıcı bulunamadı');
+  }
+  user.role = role;
+  if (role === 'Jüri Üyesi' && department) {
+    user.department = department;
+  } else if (role !== 'Jüri Üyesi') {
+    user.department = null;
+  }
+  const updatedUser = await user.save();
+  res.status(200).json({
+    _id: updatedUser._id,
+    name: updatedUser.name,
+    surname: updatedUser.surname,
+    email: updatedUser.email,
+    tcKimlik: updatedUser.tcKimlik,
+    role: updatedUser.role,
+    department: updatedUser.department
+  });
+});
+
+// @route   GET /api/users/jurymembers/department/:departmentId
+// @access  Private/Admin,Yönetici
+const getJuryMembersByDepartment = asyncHandler(async (req, res) => {
+  const juryMembers = await User.find({
+    role: 'Jüri Üyesi',
+    department: req.params.departmentId
+  })
+  .select('name surname tcKimlik email department')
+  .populate('department', 'name');
+  
+  res.status(200).json(juryMembers);
+});
+
 export{
     authUser,
     registerUser,
     logoutUser,
     getUserProfile,
     updateUserProfile,
-    getUserCount
+    getUserCount,
+    getUsers,
+    updateUserRole,
+    getJuryMembersByDepartment
 };

@@ -3,10 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Table, Button, Badge, Dropdown, Card, Alert, Modal, Spinner } from 'react-bootstrap';
 import { FaPlus, FaEdit, FaTrash, FaEye, FaFileAlt, FaFilter } from 'react-icons/fa';
 import { useGetJobsQuery, useUpdateJobStatusMutation, useDeleteJobMutation } from '../../slices/jobsApiSlice';
-import { format } from 'date-fns';
-import { tr } from 'date-fns/locale';
+import { formatDate } from '../../utils/helpers';
 import { toast } from 'react-toastify';
 import Pager from '../../components/common/Pager/Pager';
+import { getStatusBadge, getPositionBadge } from '../../utils/badges';
 
 const AdminJobsScreen = () => {
   const navigate = useNavigate();
@@ -43,8 +43,9 @@ const AdminJobsScreen = () => {
     try {
       await updateJobStatus({ id: jobId, status: newStatus }).unwrap();
       refetch();
+      toast.success('Durum güncellemesi başarılı!')
     } catch (err) {
-      console.error('İlan durumu güncellenirken hata:', err);
+      toast.error('İlan durumu güncellenirken hata:', err);
     }
   };
   
@@ -66,38 +67,12 @@ const AdminJobsScreen = () => {
       setShowDeleteModal(false);
     }
   };
+   
+  const sortedJobs = [...(jobs || [])].sort((a, b) => {
+    return new Date(b.createdAt) - new Date(a.createdAt);
+  });
   
-  const formatDate = (dateString) => {
-    return format(new Date(dateString), 'd MMMM yyyy', { locale: tr });
-  };
-  
-  const getStatusBadge = (status) => {
-    switch (status) {
-      case 'Aktif':
-        return <Badge bg='success'>Aktif</Badge>;
-      case 'Biten':
-        return <Badge bg='secondary'>Biten</Badge>;
-      case 'Taslak':
-        return <Badge bg='warning'>Taslak</Badge>;
-      default:
-        return <Badge bg='info'>{status}</Badge>;
-    }
-  };
-  
-  const getPositionBadge = (position) => {
-    switch (position) {
-      case 'Profesör':
-        return <Badge bg='danger'>{position}</Badge>;
-      case 'Doçent':
-        return <Badge bg='info'>{position}</Badge>;
-      case 'Dr. Öğr. Üyesi':
-        return <Badge bg='primary'>{position}</Badge>;
-      default:
-        return <Badge bg='dark'>{position}</Badge>;
-    }
-  };
-  
-  const filteredJobs = jobs?.filter(job => {
+  const filteredJobs = sortedJobs?.filter(job => {
     const matchesStatus = statusFilter === 'Tümü' || job.status === statusFilter;
     const matchesSearch = 
       (job.title || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -183,6 +158,7 @@ const AdminJobsScreen = () => {
                   <Dropdown.Item onClick={() => setStatusFilter('Aktif')}>Aktif</Dropdown.Item>
                   <Dropdown.Item onClick={() => setStatusFilter('Taslak')}>Taslak</Dropdown.Item>
                   <Dropdown.Item onClick={() => setStatusFilter('Biten')}>Biten</Dropdown.Item>
+                  <Dropdown.Item onClick={() => setStatusFilter('Değerlendirme')}>Değerlendirme</Dropdown.Item>
                 </Dropdown.Menu>
               </Dropdown>
             </Col>
@@ -216,12 +192,12 @@ const AdminJobsScreen = () => {
                         <td>{getStatusBadge(job.status || 'Bilinmeyen')}</td>
                         <td>
                           <div>
-                            <small className='fw-bold'>Başlangıç:</small> 
-                            {job.startDate ? formatDate(job.startDate) : 'Tarih Yok'}
+                            <small className='fw-bold'>Başlangıç: </small> 
+                            {job.startDate ? formatDate(job.startDate, false) : 'Tarih Yok'}
                           </div>
                           <div>
-                            <small className='fw-bold'>Bitiş:</small> 
-                            {job.endDate ? formatDate(job.endDate) : 'Tarih Yok'}
+                            <small className='fw-bold'>Bitiş: </small> 
+                            {job.endDate ? formatDate(job.endDate, false) : 'Tarih Yok'}
                           </div>
                         </td>
                         <td>
@@ -266,6 +242,9 @@ const AdminJobsScreen = () => {
                                 </Dropdown.Item>
                                 <Dropdown.Item onClick={() => handleUpdateStatus(job._id, 'Biten')}>
                                   Biten
+                                </Dropdown.Item>
+                                <Dropdown.Item onClick={() => handleUpdateStatus(job._id, 'Değerlendirme')}>
+                                  Değerlendirme
                                 </Dropdown.Item>
                               </Dropdown.Menu>
                             </Dropdown>

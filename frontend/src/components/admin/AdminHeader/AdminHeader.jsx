@@ -75,6 +75,12 @@ const AdminHeader = () => {
                                 </div>
                                 <span>İlan Yönetimi</span>
                             </Nav.Link>
+                            <Nav.Link as={Link} to='/admin/users' className='nav-link-admin mx-2 d-flex align-items-center'>
+                                <div className="nav-icon-container me-2">
+                                    <FaUsers />
+                                </div>
+                                <span>Üye Yönetimi</span>
+                            </Nav.Link>
                             
                             <div className="vertical-divider d-none d-lg-block"></div>
                             

@@ -77,8 +77,17 @@ export const applicationsApiSlice = apiSlice.injectEndpoints({
             }),
             providesTags: ['Applications']
         }),
-    })
-});
+
+        getApplicationPDF: builder.query({
+            query: (id) => ({
+              url: `/api/applications/${id}`,
+              params: { includeDetails: true }
+            }),
+            keepUnusedDataFor: 60,
+          }),
+
+        }),
+      });
 
 export const {
     useGetApplicationsQuery,
@@ -89,5 +98,6 @@ export const {
     useDeleteApplicationMutation,
     useCalculateApplicationPointsQuery,
     useCheckApplicationCriteriaQuery,
-    useGetJobApplicationsQuery
+    useGetJobApplicationsQuery,
+    useGetApplicationPDFQuery
 } = applicationsApiSlice;

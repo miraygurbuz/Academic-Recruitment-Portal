@@ -37,6 +37,28 @@ export const usersApiSlice = apiSlice.injectEndpoints({
                 method: 'GET'
             }),
         }),
+        getUsers: builder.query({
+            query: () => ({
+                url: `${USERS_URL}`,
+                method: 'GET'
+            }),
+            providesTags: ['User']
+        }),
+        updateUserRole: builder.mutation({
+            query: ({ id, ...data }) => ({
+                url: `${USERS_URL}/${id}/role`,
+                method: 'PUT',
+                body: data
+            }),
+            invalidatesTags: ['User']
+        }),
+        getJuryMembersByDepartment: builder.query({
+            query: (departmentId) => ({
+              url: `${USERS_URL}/jurymembers/department/${departmentId}`,
+              method: 'GET'
+            }),
+            providesTags: ['JuryMember']
+          })
     })
 })
 
@@ -45,4 +67,7 @@ export const {
     useLogoutMutation,
     useRegisterMutation,
     useUpdateUserMutation,
-    useGetUserProfileQuery } = usersApiSlice;
+    useGetUserProfileQuery,
+    useGetUsersQuery,
+    useUpdateUserRoleMutation,
+    useGetJuryMembersByDepartmentQuery } = usersApiSlice;

@@ -8,7 +8,10 @@ import {
   updateJob,
   updateJobStatus,
   deleteJob,
-  getActiveJobCount
+  getActiveJobCount,
+  getJobJuryMembers,
+  assignJuryMembers,
+  clearJuryMembers
 } from '../controllers/jobController.js';
 import { protect, admin } from '../middleware/authMiddleware.js';
 
@@ -23,5 +26,7 @@ router.post('/', protect, admin, createJob);
 router.put('/:id', protect, admin, updateJob);
 router.patch('/:id/status', protect, admin, updateJobStatus);
 router.delete('/:id', protect, admin, deleteJob);
+router.delete('/:id/jurymembers', protect, admin, clearJuryMembers);
+router.route('/:id/jurymembers').get(protect, admin, getJobJuryMembers).put(protect, admin, assignJuryMembers);
 
 export default router;

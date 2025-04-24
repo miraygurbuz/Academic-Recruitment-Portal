@@ -8,6 +8,7 @@ import { useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import Loader from '../../components/common/Loader';
 import { PUBLICATION_CATEGORIES, CITATION_CATEGORIES, PROJECT_CATEGORIES, THESIS_CATEGORIES } from '../../constants/categories';
+import BackButton from '../../components/common/BackButton';
 
 const ApplyJobScreen = () => {
   const { id } = useParams();
@@ -273,12 +274,7 @@ const ApplyJobScreen = () => {
         <Alert.Heading>İlan Bilgileri Alınamadı!</Alert.Heading>
         <p>{error?.data?.message || 'Bilinmeyen hata'}</p>
         <div className='mt-3'>
-          <Button 
-            variant='outline-danger' 
-            onClick={() => navigate('/')}
-          >
-            <FaArrowLeft className='me-2' /> İlanlara Geri Dön
-          </Button>
+        <BackButton />
         </div>
       </Alert>
     </Container>
@@ -288,13 +284,7 @@ const ApplyJobScreen = () => {
     <Container className='mt-4 mb-5'>
       <div className='d-flex justify-content-between align-items-center mb-4'>
         <h1 className='h2'>Akademik İlan Başvurusu</h1>
-        <Button 
-          variant='secondary' 
-          onClick={() => navigate('/')}
-          className='d-flex align-items-center'
-        >
-          <FaArrowLeft className='me-2' /> İlanlara Geri Dön
-        </Button>
+        <BackButton />
       </div>
       
       <Card className='mb-4 shadow-sm'>

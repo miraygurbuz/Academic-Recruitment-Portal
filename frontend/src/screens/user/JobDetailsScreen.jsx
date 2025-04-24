@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Container, Card, Button, Row, Col, Badge, Spinner, Alert, Tooltip, OverlayTrigger } from 'react-bootstrap';
-import { FaArrowLeft, FaShareAlt, FaCheck, FaClipboardCheck } from 'react-icons/fa';
+import { FaShareAlt, FaCheck, FaClipboardCheck } from 'react-icons/fa';
 import { useGetJobByIdQuery } from '../../slices/jobsApiSlice';
 import { useGetMyApplicationsQuery } from '../../slices/applicationsApiSlice';
 import { useSelector } from 'react-redux';
 import { formatDate } from '../../utils/helpers';
+import BackButton from '../../components/common/BackButton';
+import { getStatusBadge } from '../../utils/badges';
 
 const JobDetailsScreen = () => {
     const { id } = useParams();
@@ -47,17 +49,6 @@ const JobDetailsScreen = () => {
             });
     };
     
-    const getStatusBadge = (status) => {
-        switch (status) {
-            case 'Aktif':
-                return <Badge bg='success' className='p-2'>Aktif İlan</Badge>;
-            case 'Biten':
-                return <Badge bg='secondary' className='p-2'>Süresi Dolmuş İlan</Badge>;
-            default:
-                return <Badge bg='secondary' className='p-2'>{status}</Badge>;
-        }
-    };
-
     if (isLoading) {
         return (
             <Container className='d-flex justify-content-center align-items-center' style={{ minHeight: '100vh' }}>
@@ -75,13 +66,7 @@ const JobDetailsScreen = () => {
                 <Alert variant='danger' className='w-75'>
                     <Alert.Heading>Hata!</Alert.Heading>
                     <p>İlan bilgileri yüklenirken bir sorun oluştu: {error?.data?.message || error?.message || 'Bilinmeyen hata'}</p>
-                    <Button 
-                    variant='secondary' 
-                    onClick={() => navigate('/')}
-                    className='d-flex align-items-center'
-                    >
-                        <FaArrowLeft className='me-2' /> İlanlara Geri Dön
-                    </Button>
+                    <BackButton />
                 </Alert>
             </Container>
         );
@@ -93,13 +78,7 @@ const JobDetailsScreen = () => {
                 <Alert variant='warning' className='w-75'>
                     <Alert.Heading>İlan Bulunamadı</Alert.Heading>
                     <p>Aradığınız ilan bulunamadı veya kaldırılmış olabilir.</p>
-                    <Button 
-                    variant='secondary' 
-                    onClick={() => navigate('/')}
-                    className='d-flex align-items-center'
-                    >
-                        <FaArrowLeft className='me-2' /> İlanlara Geri Dön
-                    </Button>
+                    <BackButton />
                 </Alert>
             </Container>
         );
@@ -114,13 +93,7 @@ const JobDetailsScreen = () => {
                 <Card.Body style={{ flex: '1 1 auto' }}>
                     <Row className='mb-3'>
                         <Col>
-                        <Button 
-                    variant='secondary' 
-                    onClick={() => navigate('/')}
-                    className='d-flex align-items-center'
-                    >
-                        <FaArrowLeft className='me-2' /> İlanlara Geri Dön
-                    </Button>
+                        <BackButton />
                         </Col>
                         <Col className='text-end'>
                             <OverlayTrigger

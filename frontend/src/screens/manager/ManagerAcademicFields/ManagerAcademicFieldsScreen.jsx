@@ -54,7 +54,6 @@ const ManagerAcademicFieldsScreen = () => {
       handleCloseDeleteModal();
       refetch();
     } catch (error) {
-      console.error('Delete error:', error);
       toast.error(error?.data?.message || 'Akademik alan silinemedi. Bir hata oluştu.');
     }
   };
@@ -75,10 +74,6 @@ const ManagerAcademicFieldsScreen = () => {
     if (newPage >= 1 && newPage <= totalPages) {
       setCurrentPage(newPage);
     }
-  };
-
-  const handleAddNew = () => {
-    navigate('/manager/academic-fields/create');
   };
 
   const handleEdit = (fieldId) => {
@@ -135,13 +130,6 @@ const ManagerAcademicFieldsScreen = () => {
       <div className='text-muted'>
         Toplam {academicFields?.length || 0} akademik alan, {filteredFields.length} sonuç gösteriliyor
       </div>
-      <Button 
-        variant='success' 
-        onClick={handleAddNew}
-        className='d-flex align-items-center'
-      >
-        <FaPlus className='me-2' /> Yeni Alan Ekle
-      </Button>
     </div>
 
       {currentFields.length > 0 ? (

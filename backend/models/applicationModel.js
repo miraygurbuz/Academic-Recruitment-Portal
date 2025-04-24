@@ -119,7 +119,7 @@ const juryEvaluationSchema = mongoose.Schema({
     },
     result: {
         type: String,
-        enum: ['Olumlu', 'Olumsuz'],
+        enum: ['Olumlu', 'Olumsuz', 'Beklemede'],
         default: 'Olumlu'
     },
     comments: String,

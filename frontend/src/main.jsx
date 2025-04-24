@@ -33,11 +33,20 @@ import AdminJobEditScreen from './screens/admin/AdminJobEditScreen.jsx'
 import AdminJobDetailsScreen from './screens/admin/AdminJobDetailsScreen.jsx'
 import AdminJobCreationScreen from './screens/admin/AdminJobCreationScreen.jsx'
 import AdminJobsScreen from './screens/admin/AdminJobsScreen.jsx'
-import DashboardScreen from './screens/admin/AdminDashboardScreen/AdminDashboardScreen.jsx'
+import AdminDashboardScreen from './screens/admin/AdminDashboard/AdminDashboardScreen.jsx'
 import JobApplicationsList from './components/admin/AdminApplications/AdminApplicationsByJob.jsx'
+import AdminRoleManagementScreen from './screens/admin/AdminRoleManagementScreen.jsx'
 
 import ManagerAcademicFields from './screens/manager/ManagerAcademicFields/ManagerAcademicFieldsScreen.jsx'
 import ManagerAcademicFieldForm from './screens/manager/ManagerAcademicFields/ManagerAcademicFieldForm.jsx'
+import ManagerDashboardScreen from './screens/manager/ManagerDashboardScreen.jsx'
+import ManagerApplicationsList from './screens/manager/ManagerApplicationsScreen.jsx'
+import ManagerApplicationDetailsScreen from './screens/manager/ManagerApplicationDetailsScreen.jsx'
+import ManagerApplicationPDFScreen from './screens/manager/ManagerApplicationPDFScreen.jsx'
+import ManagerJobsScreen from './screens/manager/ManagerJobsScreen.jsx'
+import ManagerJobDetailsScreen from './screens/manager/ManagerJobDetailsScreen.jsx'
+import ManagerJobApplicationsScreen from './screens/manager/ManagerJobApplicationsScreen.jsx'
+import ManagerAssignJuryScreen from './screens/manager/ManagerAssignJuryScreen.jsx'
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -48,7 +57,7 @@ const router = createBrowserRouter(
         <Route path='/home' element={<HomeScreen />} />
         <Route path='/login' element={<LoginScreen />} />
         <Route path='/register' element={<RegisterScreen />} />
-        <Route path="/jobs/:id" element={<JobDetailsScreen />} />
+        <Route path='/jobs/:id' element={<JobDetailsScreen />} />
       </Route>
       
       <Route path='' element={<PrivateRoute />}>
@@ -59,27 +68,35 @@ const router = createBrowserRouter(
       </Route>
 
       <Route path='' element={<RoleBasedRoute allowedRoles={['Admin']} allowGuest={false} />}>
-        <Route path='/admin/home' element={<DashboardScreen />} />
+        <Route path='/admin/home' element={<AdminDashboardScreen />} />
         <Route path='/admin/jobs/create' element={<AdminJobCreationScreen />}/>
         <Route path='/admin/jobs' element={<AdminJobsScreen />}/>
         <Route path='/admin/applications' element={<AdminApplicationsScreen />}/>
         <Route path='/admin/applications/:id' element={<AdminApplicationDetailsScreen />}/>
-        <Route path="/admin/jobs/:id" element={<AdminJobDetailsScreen />} />
-        <Route path="/admin/jobs/:id/edit" element={<AdminJobEditScreen />} />
-        <Route path="/admin/jobs/:id/applications" element={<JobApplicationsList />} />
+        <Route path='/admin/jobs/:id' element={<AdminJobDetailsScreen />} />
+        <Route path='/admin/jobs/:id/edit' element={<AdminJobEditScreen />} />
+        <Route path='/admin/jobs/:id/applications' element={<JobApplicationsList />} />
+        <Route path='/admin/users' element={<AdminRoleManagementScreen />} />
       </Route>
 
       <Route path='' element={<RoleBasedRoute allowedRoles={['Yönetici']} allowGuest={false} />}>
-        <Route path='/manager/home' element={<DashboardScreen />} />
+        <Route path='/manager/home' element={<ManagerDashboardScreen />} />
         <Route path='/manager/academic-fields' element={<ManagerAcademicFields />}/>
-        <Route path="/manager/academic-fields/edit/:id" element={<ManagerAcademicFieldForm />} />
+        <Route path='/manager/academic-fields/edit/:id' element={<ManagerAcademicFieldForm />} />
+        <Route path='/manager/applications' element={<ManagerApplicationsList />} />
+        <Route path='/manager/applications/:id' element={<ManagerApplicationDetailsScreen />} />
+        <Route path='/manager/applications/:id/PDF' element={<ManagerApplicationPDFScreen />} />
+        <Route path='/manager/jobs' element={<ManagerJobsScreen />} />
+        <Route path='/manager/jobs/:id' element={<ManagerJobDetailsScreen />} />
+        <Route path='/manager/jobs/:id/applications' element={<ManagerJobApplicationsScreen />} />
+        <Route path='/manager/jobs/:id/jury' element={<ManagerAssignJuryScreen />} />
       </Route>
 
       <Route path='' element={<RoleBasedRoute allowedRoles={['Jüri Üyesi']} allowGuest={false} />}>
-        <Route path='/jury/home' element={<DashboardScreen />} />
+        <Route path='/jury/home' element={<AdminDashboardScreen />} />
       </Route>
       
-      <Route path="*" element={<NotFoundScreen />} />
+      <Route path='*' element={<NotFoundScreen />} />
     </Route>
   )
 )

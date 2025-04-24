@@ -45,11 +45,6 @@ const jobSchema = mongoose.Schema({
             type: mongoose.Schema.Types.ObjectId,
             ref: 'User'
         },
-        status: {
-            type: String,
-            enum: ['Davet Edildi', 'Kabul Edildi', 'Reddedildi'],
-            default: 'Davet Edildi'
-        },
     }]
 }, {timestamps: true});
 

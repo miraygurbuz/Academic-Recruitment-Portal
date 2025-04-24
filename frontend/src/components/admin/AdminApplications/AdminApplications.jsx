@@ -6,6 +6,7 @@ import { useGetApplicationsQuery, useDeleteApplicationMutation } from '../../../
 import { formatDate } from '../../../utils/helpers'
 import { toast } from 'react-toastify';
 import Pager from '../../common/Pager/Pager';
+import { getStatusBadge, getPositionBadge } from '../../../utils/badges';
 
 const ApplicationsList = () => {
     const navigate = useNavigate();
@@ -44,33 +45,7 @@ const ApplicationsList = () => {
         setShowDeleteModal(false);
       }
     };
-    
-    const getStatusBadge = (status) => {
-      switch (status) {
-        case 'Beklemede':
-          return <Badge bg='warning'>Beklemede</Badge>;
-        case 'Onaylandı':
-          return <Badge bg='success'>Onaylandı</Badge>;
-        case 'Reddedildi':
-          return <Badge bg='danger'>Reddedildi</Badge>;
-        default:
-          return <Badge bg='secondary'>{status || 'Bilinmeyen'}</Badge>;
-      }
-    };
-    
-    const getPositionBadge = (position) => {
-      switch (position) {
-        case 'Profesör':
-          return <Badge bg='danger'>{position}</Badge>;
-        case 'Doçent':
-          return <Badge bg='info'>{position}</Badge>;
-        case 'Dr. Öğr. Üyesi':
-          return <Badge bg='primary'>{position}</Badge>;
-        default:
-          return <Badge bg='dark'>{position || 'Bilinmeyen'}</Badge>;
-      }
-    };
-    
+          
     const applications = data?.applications || [];
     
     const filteredApplications = applications.filter(application => {
