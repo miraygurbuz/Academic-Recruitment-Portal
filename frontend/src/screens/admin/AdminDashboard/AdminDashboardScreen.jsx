@@ -11,38 +11,21 @@ const AdminDashboardScreen = () => {
 
   const {
     data: pendingReviews = 0,
-    isLoading: isLoadingPending,
-    error: pendingError
   } = useGetPendingApplicationCountQuery();
 
   const { 
     data: totalUsers = 0, 
-    isLoading: isLoadingUsers, 
-    error: usersError 
   } = useGetUserCountQuery();
   
   const { 
     data: activePositions = 0, 
-    isLoading: isLoadingPositions, 
-    error: positionsError 
   } = useGetActiveJobCountQuery();
 
   const { 
     data: applicationsData, 
-    isLoading 
 } = useGetApplicationsQuery();
 
 const totalApplications = applicationsData?.totalApplications || 0;
-
-  const getBadgeVariant = (status) => {
-    switch (status) {
-      case 'İnceleniyor': return 'info';
-      case 'Değerlendirmede': return 'primary';
-      case 'Kabul Edildi': return 'success';
-      case 'Reddedildi': return 'danger';
-      default: return 'secondary';
-    }
-  };
 
   const handleCreateJob = () => {
     navigate('/admin/jobs/create');

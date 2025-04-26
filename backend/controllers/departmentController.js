@@ -35,7 +35,7 @@ const getDepartmentsByFaculty = asyncHandler(async (req, res) => {
 });
 
 // @route   POST /api/departments
-// @access  Private/Yönetici
+// @access  Private/Admin
 const createDepartment = asyncHandler(async (req, res) => {
   const department = new Department(req.body);
   const newDepartment = await department.save();
@@ -43,7 +43,7 @@ const createDepartment = asyncHandler(async (req, res) => {
 });
 
 // @route   PUT /api/departments/:id
-// @access  Private/Yönetici
+// @access  Private/Admin
 const updateDepartment = asyncHandler(async (req, res) => {
   const updatedDepartment = await Department.findByIdAndUpdate(
     req.params.id, 
@@ -60,7 +60,7 @@ const updateDepartment = asyncHandler(async (req, res) => {
 });
 
 // @route   DELETE /api/departments/:id
-// @access  Private/Yönetici
+// @access  Private/Admin
 const deleteDepartment = asyncHandler(async (req, res) => {
   const deletedDepartment = await Department.findByIdAndDelete(req.params.id);
   

@@ -8,6 +8,7 @@ import { formatDate } from '../../../utils/helpers';
 import { toast } from 'react-toastify';
 import BackButton from '../../common/BackButton';
 import { getStatusBadge, getPositionBadge } from '../../../utils/badges';
+import Loader from '../../common/Loader';
 
 const JobApplicationsList = () => {
   const { id } = useParams();
@@ -66,8 +67,7 @@ const JobApplicationsList = () => {
   if (isLoading) {
     return (
       <Container className='mt-4 text-center'>
-        <Spinner animation='border' variant='success' />
-        <p>Veriler yükleniyor...</p>
+        <Loader/>
       </Container>
     );
   }

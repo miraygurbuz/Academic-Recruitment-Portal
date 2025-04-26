@@ -1,12 +1,13 @@
 import { Container, Card, Row, Col, Table, Badge, Button, Alert, ListGroup } from 'react-bootstrap';
-import { FaArrowLeft, FaFileAlt, FaUserGraduate, FaBook, FaProjectDiagram, FaQuoteRight } from 'react-icons/fa';
-import { useParams, useNavigate } from 'react-router-dom';
+import { FaFileAlt, FaUserGraduate, FaBook, FaProjectDiagram, FaQuoteRight, FaFilePdf, FaFileWord, FaFileImage, FaFile, FaDownload } from 'react-icons/fa';
+import { useParams } from 'react-router-dom';
 import { useGetApplicationByIdQuery } from '../../slices/applicationsApiSlice';
 import { useGetJobByIdQuery } from '../../slices/jobsApiSlice';
 import { useGetFacultyByIdQuery, useGetDepartmentByIdQuery } from '../../slices/fieldsApiSlice';
 import Loader from '../../components/common/Loader';
 import BackButton from '../../components/common/BackButton';
 import { getStatusBadge } from '../../utils/badges';
+import { toast } from 'react-toastify';
 
 const ApplicationDetailsScreen = () => {
   const { id } = useParams();
@@ -33,8 +34,58 @@ const ApplicationDetailsScreen = () => {
     { skip: !department?.faculty }
   );
 
+  const getFileIcon = (fileUrl) => {
+    if (!fileUrl || typeof fileUrl !== 'string') return <FaFile size={24} className="text-secondary" />;
+    
+    try {
+      const ext = fileUrl.split('.').pop().toLowerCase();
+      
+      if (['pdf'].includes(ext)) {
+        return <FaFilePdf size={24} className="text-danger" />;
+      } else if (['doc', 'docx'].includes(ext)) {
+        return <FaFileWord size={24} className="text-primary" />;
+      } else if (['jpg', 'jpeg', 'png', 'gif'].includes(ext)) {
+        return <FaFileImage size={24} className="text-success" />;
+      } else {
+        return <FaFile size={24} className="text-secondary" />;
+      }
+    } catch (error) {
+      console.error("Error in getFileIcon:", error);
+      return <FaFile size={24} className="text-secondary" />;
+    }
+  };
+
+  const downloadFile = (filename) => {
+    const downloadUrl = `/api/applications/download-file/${filename}`;
+    fetch(downloadUrl)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Dosya indirilemedi');
+        }
+        const suggestedFilename = response.headers
+          .get('Content-Disposition')
+          ?.split('filename=')[1]
+          ?.replace(/"/g, '') || filename;
+        return response.blob().then(blob => ({ blob, suggestedFilename }));
+      })
+      .then(({ blob, suggestedFilename }) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = suggestedFilename;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      })
+      .catch(error => {
+        toast.error('Dosya indirilemedi');
+      });
+  };
+
   if (isLoadingApplication) return <Loader />;
-  
+
   if (isApplicationError) return (
     <Container className="mt-4">
       <Alert variant="danger">
@@ -132,24 +183,42 @@ const ApplicationDetailsScreen = () => {
           </div>
         </Card.Header>
         <Card.Body>
-          {application?.documents?.length > 0 ? (
-            <ListGroup variant="flush">
+          {application?.documents && application.documents.length > 0 ? (
+            <Row xs={1} md={2} lg={3} className="g-4">
               {application.documents.map((doc, index) => (
-                <ListGroup.Item key={index} className="d-flex justify-content-between align-items-center px-0">
-                  <div>
-                    <span className="fw-bold me-2">{index + 1}.</span>
-                    {doc.fileUrl.split('/').pop()}
-                  </div>
-                  <Badge bg="secondary">
-                    {new Date(doc.uploadedAt).toLocaleDateString('tr-TR')}
-                  </Badge>
-                </ListGroup.Item>
-              ))}
-            </ListGroup>
-          ) : (
-            <Alert variant="warning">Belge yüklenmemiş.</Alert>
-          )}
-        </Card.Body>
+                <Col key={index}>
+                  <Card className="h-100 border-light shadow-sm document-card">
+                    <Card.Body className="text-center p-4">
+                      <div className="mb-3">
+                        {getFileIcon(doc.fileUrl)}
+                      </div>
+                      <Card.Title className="text-truncate fs-6">
+                        {doc.originalName || "Belge"}
+                      </Card.Title>
+                      <Card.Text className="text-muted small">
+                        {doc.uploadedAt ? new Date(doc.uploadedAt).toLocaleDateString('tr-TR') : ''}
+                      </Card.Text>
+                      <div className="mt-3">
+                        <Button 
+                        variant="outline-success" 
+                        size="sm"
+                        onClick={() => {
+                          const fileName = doc.fileUrl.split('/').pop().split('\\').pop();
+                          downloadFile(fileName);
+                        }}
+                        >
+                          <FaDownload className="me-1" /> İndir
+                        </Button>
+                      </div>
+            </Card.Body>
+          </Card>
+        </Col>
+      ))}
+    </Row>
+  ) : (
+    <Alert variant="warning">Belge yüklenmemiş.</Alert>
+  )}
+</Card.Body>
       </Card>
       
       <Card className="mb-4 shadow-sm">

@@ -9,6 +9,9 @@ const documentSchema = mongoose.Schema({
         type: String,
         required: true
     },
+    originalName: {
+        type: String
+    },
     uploadedAt: {
         type: Date,
         default: Date.now
@@ -123,6 +126,8 @@ const juryEvaluationSchema = mongoose.Schema({
         default: 'Olumlu'
     },
     comments: String,
+    reportFileUrl: String,
+    reportOriginalName: String,
     evaluatedAt: {
         type: Date,
         default: Date.now
@@ -173,7 +178,7 @@ const applicationSchema = mongoose.Schema({
     status: {
         type: String,
         enum: ['Beklemede', 'Onaylandı', 'Reddedildi'],
-        default: 'taslak'
+        default: 'Beklemede'
     },
     
     documents: [documentSchema],

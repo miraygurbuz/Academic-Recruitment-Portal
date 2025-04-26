@@ -1,6 +1,7 @@
 import asyncHandler from 'express-async-handler';
 import Job from '../models/jobModel.js';
 import User from '../models/userModel.js';
+import { createNotification, notifyMultipleUsers } from '../services/notificationService.js';
 
 // @route   GET /api/jobs
 // @access  Public
@@ -50,16 +51,19 @@ const getActiveJobs = asyncHandler(async (req, res) => {
     status: 'Aktif',
     startDate: { $lte: currentDate },
     endDate: { $gte: currentDate }
-  }).populate({
-    path: 'department',
-    populate: {
-      path: 'faculty',
-      populate: { path: 'academicField' }
-    }
-  });
-  
+  })
+    .populate({
+      path: 'department',
+      populate: {
+        path: 'faculty',
+        populate: { path: 'academicField' }
+      }
+    })
+    .sort({ startDate: -1 });
+
   res.status(200).json(activeJobs);
 });
+
 
 // @route   GET /api/jobs/active/count
 // @access  Public
@@ -83,6 +87,23 @@ const createJob = asyncHandler(async (req, res) => {
   });
   
   const newJob = await job.save();
+  try {
+    const managers = await User.find({ role: 'Yönetici' });
+    if (managers.length > 0) {
+      await notifyMultipleUsers(
+        managers.map(manager => manager._id), 
+        {
+          type: 'system',
+          title: `Yeni İlan Oluşturuldu`,
+          message: `${job.title} ilanına jüri ataması yapabilirsiniz.`,
+          relatedId: job._id,
+          refModel: 'Job',
+          url: `/manager/jobs/${job._id}/jury`,
+        }
+      );
+    }
+  } catch (error) {}
+
   res.status(201).json(newJob);
 });
 
@@ -164,20 +185,23 @@ const assignJuryMembers = asyncHandler(async (req, res) => {
   const { juryMemberIds } = req.body;
   
   if (!juryMemberIds || juryMemberIds.length < 3 || juryMemberIds.length > 5) {
-    res.status(400);
-    throw new Error('3 ile 5 arası jüri üyesi seçilmelidir');
+    return res.status(400).json({
+      message: '3 ile 5 arası jüri üyesi seçilmelidir'
+    });
   }
   
   const job = await Job.findById(req.params.id).populate('department');
   
   if (!job) {
-    res.status(404);
-    throw new Error('İlan bulunamadı');
+    return res.status(404).json({
+      message: 'İlan bulunamadı'
+    });
   }
 
   if (job.status !== 'Aktif') {
-    res.status(400);
-    throw new Error('Sadece aktif ilanlara jüri atama işlemi yapılabilir.');
+    return res.status(400).json({
+      message: 'Sadece aktif ilanlara jüri atama işlemi yapılabilir.'
+    });
   }
   
   const juryMembers = await User.find({ 
@@ -186,8 +210,9 @@ const assignJuryMembers = asyncHandler(async (req, res) => {
   });
   
   if (juryMembers.length !== juryMemberIds.length) {
-    res.status(400);
-    throw new Error('Bazı jüri üyeleri bulunamadı veya jüri üyesi değil');
+    return res.status(400).json({
+      message: 'Bazı jüri üyeleri bulunamadı veya jüri üyesi değil'
+    });
   }
   
   const wrongDepartmentJuryMembers = juryMembers.filter(jury => 
@@ -195,13 +220,30 @@ const assignJuryMembers = asyncHandler(async (req, res) => {
   );
   
   if (wrongDepartmentJuryMembers.length > 0) {
-    res.status(400);
-    throw new Error('Tüm jüri üyeleri ilanın açıldığı bölüme ait olmalıdır');
+    return res.status(400).json({
+      message: 'Tüm jüri üyeleri ilanın açıldığı bölüme ait olmalıdır'
+    });
   }
   
   job.juryMembers = juryMemberIds.map(id => ({ user: id }));
   
   await job.save();
+
+  const notificationPromises = juryMembers.map(member => 
+    createNotification({
+      recipientId: member._id,
+      type: 'application',
+      title: 'Jüri Ataması',
+      message: `"${job.title}" ilanına jüri üyesi olarak atandınız.`,
+      relatedId: job._id,
+      refModel: 'Job',
+      url: `/jury/jobs/${job._id}`,
+    }).catch(error => {
+      return null;
+    })
+  );
+
+  await Promise.allSettled(notificationPromises);
   
   res.status(200).json({ 
     message: 'Jüri ataması başarıyla yapıldı',
@@ -233,6 +275,27 @@ const clearJuryMembers = asyncHandler(async (req, res) => {
   });
 });
 
+// @route   GET /api/jobs/jury/assigned
+// @access  Private/Jury
+const getJuryAssignedJobs = asyncHandler(async (req, res) => {
+  const juryId = req.user._id;
+  const jobs = await Job.find({
+    'juryMembers.user': juryId,
+    status: { $in: ['Değerlendirme', 'Biten'] }
+  })
+  .populate({
+    path: 'department',
+    populate: {
+      path: 'faculty',
+      populate: { path: 'academicField' }
+    }
+  })
+  .populate('createdBy', 'name surname')
+  .sort('-createdAt');
+  
+  res.status(200).json(jobs);
+});
+
 export {
   getAllJobs,
   getJobById,
@@ -245,5 +308,6 @@ export {
   deleteJob,
   assignJuryMembers,
   getJobJuryMembers,
-  clearJuryMembers
+  clearJuryMembers,
+  getJuryAssignedJobs
 };

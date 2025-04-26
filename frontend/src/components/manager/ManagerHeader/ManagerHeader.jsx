@@ -1,13 +1,13 @@
 import { Navbar, Nav, NavDropdown, Container } from 'react-bootstrap';
 import { FaFileSignature, FaSignOutAlt, FaUser, FaHome, FaUsers, FaClipboardList } from 'react-icons/fa';
 import { useSelector, useDispatch } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 import { useLogoutMutation, useGetUserProfileQuery } from '../../../slices/usersApiSlice';
 import { logout, updateUser } from '../../../slices/authSlice';
 import { useEffect } from 'react';
 import Amblem from '../../common/Amblem';
 import './ManagerHeader.css'
+import NotificationDropdown from '../../common/NotificationDropdown';
 
 const ManagerHeader = () => {
     const { userInfo } = useSelector((state) => state.auth);
@@ -21,9 +21,7 @@ const ManagerHeader = () => {
             await logoutApiCall().unwrap();
             dispatch(logout());
             window.location = '/';
-        } catch(error){
-            console.log(error);
-        }
+        } catch(error){}
     };
 
     const { data: profileData, refetch } = useGetUserProfileQuery(undefined, {
@@ -66,23 +64,27 @@ const ManagerHeader = () => {
                                 <div className="nav-icon-container me-2">
                                     <FaClipboardList />
                                 </div>
-                                <span>Başvuru Yönetimi</span>
+                                <span>Başvurular</span>
                             </Nav.Link>
                             <Nav.Link as={Link} to='/manager/academic-fields' className='nav-link-manager mx-2 d-flex align-items-center'>
                                 <div className="nav-icon-container me-2">
                                     <FaFileSignature />
                                 </div>
-                                <span>Kriter Yönetimi</span>
+                                <span>Kriterler</span>
                             </Nav.Link>
                             <Nav.Link as={Link} to='/manager/jobs' className='nav-link-manager mx-2 d-flex align-items-center'>
                                 <div className="nav-icon-container me-2">
                                     <FaUsers />
                                 </div>
-                                <span>İlan Yönetimi & Jüri Ataması</span>
+                                <span>Jüri Ataması</span>
                             </Nav.Link>
                             
                             <div className="vertical-divider d-none d-lg-block"></div>
-                            
+
+                            <div className="nav-link-user mx-2 d-flex align-items-center">
+                                <NotificationDropdown />
+                            </div>
+
                             <NavDropdown
                                 title={
                                     <div className='d-inline-flex align-items-center'>

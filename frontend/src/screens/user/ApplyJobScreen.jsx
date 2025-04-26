@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Container, Form, Button, Card, Alert, Row, Col, Spinner, ListGroup, Badge } from 'react-bootstrap';
-import { FaUpload, FaArrowLeft, FaTrash,FaFileAlt, FaPlus } from 'react-icons/fa';
+import { FaUpload, FaTrash, FaFileAlt, FaPlus } from 'react-icons/fa';
 import { useGetJobByIdQuery } from '../../slices/jobsApiSlice';
 import { useCreateApplicationMutation } from '../../slices/applicationsApiSlice';
 import { useSelector } from 'react-redux';
@@ -53,10 +53,12 @@ const ApplyJobScreen = () => {
         title: '',
         year: '',
       }
-    ],
-    documents: [],
+    ]
   });
-  
+
+  const [uploadedFiles, setUploadedFiles] = useState([]);
+  const [fileInfos, setFileInfos] = useState([]);
+
   const addPublication = () => {
     setFormData(prev => ({
       ...prev,
@@ -74,13 +76,13 @@ const ApplyJobScreen = () => {
       ]
     }));
   };
-  
+
   const removePublication = (index) => {
     const updatedPublications = [...formData.publications];
     updatedPublications.splice(index, 1);
     setFormData(prev => ({ ...prev, publications: updatedPublications }));
   };
-  
+
   const addCitation = () => {
     setFormData(prev => ({
       ...prev,
@@ -143,30 +145,29 @@ const ApplyJobScreen = () => {
     setFormData(prev => ({ ...prev, theses: updatedTheses }));
   };
   
-  const handleFileUpload = (e) => {
-    const files = Array.from(e.target.files);
-    
-    const fileInfos = files.map(file => ({
+const handleFileUpload = (e) => {
+  const selectedFiles = Array.from(e.target.files);
+
+  const updatedInfos = selectedFiles.map(file => {  
+    return {
       name: file.name,
-      type: file.type,
       size: file.size,
-      lastModified: file.lastModified,
-      fileUrl: `/uploads/placeholder_${file.name.replace(/\s+/g, '_')}`
-    }));
-    
-    setFormData(prev => ({
-      ...prev,
-      documents: [...prev.documents, ...fileInfos]
-    }));
-  };
+      file: file,
+    };
+  });
+
+  setFileInfos(prev => [...prev, ...updatedInfos]);
+};
+  
   
   const removeFile = (index) => {
-    const updatedFiles = [...formData.documents];
+    const updatedFileInfos = [...fileInfos];
+    updatedFileInfos.splice(index, 1);
+    setFileInfos(updatedFileInfos);
+    
+    const updatedFiles = [...uploadedFiles];
     updatedFiles.splice(index, 1);
-    setFormData(prev => ({ 
-      ...prev, 
-      documents: updatedFiles 
-    }));
+    setUploadedFiles(updatedFiles);
   };
   
   const handleChange = (e, section, field, index = null) => {
@@ -216,53 +217,65 @@ const ApplyJobScreen = () => {
       setFormData(prev => ({ ...prev, theses: updatedTheses }));
     }
   };
+
+  const validatePublications = () => {
+    return formData.publications.every(pub => 
+      pub.category && 
+      pub.title && 
+      pub.authors && 
+      pub.journal && 
+      pub.year
+    );
+  };
   
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
+    if (!validatePublications()) {
+      toast.error('Lütfen tüm yayın alanlarını doldurunuz');
+      return;
+    }
+  
     if (!userInfo) {
       toast.error('Lütfen önce giriş yapınız');
       navigate('/login');
       return;
     }
-    
+  
     try {
       let academicFieldId = '';
       if (job?.department?.faculty?.academicField?._id) {
         academicFieldId = job.department.faculty.academicField._id;
       }
-      
+  
       if (!academicFieldId) {
         toast.error('Akademik alan bilgisi bulunamadı');
         return;
       }
-      
-      const documents = formData.documents.map(file => ({
-        type: file.type || 'application/pdf',
-        fileUrl: `/uploads/placeholder_${file.name}`,
-        uploadedAt: new Date()
-      }));
-      
-      const applicationData = {
-        jobId: id,
-        candidateId: userInfo._id,
-        academicFieldId: academicFieldId,
-        positionType: job.position,
-        status: 'Beklemede',
-        documents: documents,
-        publications: formData.publications,
-        citations: formData.citations,
-        projects: formData.projects,
-        theses: formData.theses,
-        submittedAt: new Date()
-      };
-      
+
+      const applicationData = new FormData();
+      applicationData.append('jobId', id);
+      applicationData.append('candidateId', userInfo._id);
+      applicationData.append('academicFieldId', academicFieldId);
+      applicationData.append('positionType', job.position);
+      applicationData.append('status', 'Beklemede');
+      applicationData.append('publications', JSON.stringify(formData.publications));
+      applicationData.append('citations', JSON.stringify(formData.citations));
+      applicationData.append('projects', JSON.stringify(formData.projects));
+      applicationData.append('theses', JSON.stringify(formData.theses));
+  
+      fileInfos.forEach(fileObj => {
+        if (fileObj.file instanceof File) {
+          applicationData.append('documents', fileObj.file);
+        }
+      });
+  
       const result = await createApplication(applicationData).unwrap();
+
       toast.success('Başvurunuz başarıyla gönderildi');
       navigate('/my-applications');
     } catch (err) {
-      console.error('Application submission error:', err);
-      toast.error(err?.data?.message || 'Başvuru gönderilirken bir hata oluştu');
+      toast.error(err?.data?.message || 'Başvuru sırasında hata oluştu');
     }
   };
 
@@ -324,7 +337,7 @@ const ApplyJobScreen = () => {
         </Card.Body>
       </Card>
       
-      <Form onSubmit={handleSubmit}>
+      <Form onSubmit={handleSubmit} encType="multipart/form-data">
         <Card className='mb-4 shadow-sm'>
           <Card.Header className='bg-success text-white'>
             <h3 className='h5 mb-0'>Belge Yükleme</h3>
@@ -334,9 +347,9 @@ const ApplyJobScreen = () => {
               <p className='mb-0'><strong>Önemli:</strong> Tüm özgeçmiş, yayın, diploma ve diğer belgelerinizi tek PDF dosyasında toplayıp yükleyebilirsiniz. Alternatif olarak ayrı dosyalar halinde yükleyebilirsiniz.</p>
             </Alert>
             
-            {formData.documents.length > 0 ? (
+            {fileInfos.length > 0 ? (
               <ListGroup className='mb-3'>
-                {formData.documents.map((file, index) => (
+                {fileInfos.map((file, index) => (
                   <ListGroup.Item key={index} className='d-flex justify-content-between align-items-center'>
                     <div>
                       <FaUpload className='me-2 text-success' />
@@ -740,7 +753,7 @@ const ApplyJobScreen = () => {
               type='submit' 
               variant='success'
               size='lg'
-              disabled={isSubmitting}
+              disabled={isSubmitting || fileInfos.length === 0}
               className='px-5'
             >
               {isSubmitting ? (

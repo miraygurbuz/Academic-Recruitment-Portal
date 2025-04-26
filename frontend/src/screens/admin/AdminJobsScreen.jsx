@@ -5,8 +5,9 @@ import { FaPlus, FaEdit, FaTrash, FaEye, FaFileAlt, FaFilter } from 'react-icons
 import { useGetJobsQuery, useUpdateJobStatusMutation, useDeleteJobMutation } from '../../slices/jobsApiSlice';
 import { formatDate } from '../../utils/helpers';
 import { toast } from 'react-toastify';
-import Pager from '../../components/common/Pager/Pager';
 import { getStatusBadge, getPositionBadge } from '../../utils/badges';
+import Pager from '../../components/common/Pager/Pager';
+import Loader from '../../components/common/Loader';
 
 const AdminJobsScreen = () => {
   const navigate = useNavigate();
@@ -95,10 +96,7 @@ const AdminJobsScreen = () => {
   
   if (isLoading) {
     return (
-      <Container className='mt-4 text-center'>
-        <Spinner animation='border' variant='success' />
-        <p>İlanlar yükleniyor...</p>
-      </Container>
+      <Loader/>
     );
   }
   

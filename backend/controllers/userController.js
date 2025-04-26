@@ -2,6 +2,7 @@ import asyncHandler from 'express-async-handler';
 import generateToken from '../utils/generateToken.js';
 import User from '../models/userModel.js';
 import { verifyTCKimlik } from '../services/nviService.js';
+import { createNotification } from '../services/notificationService.js';
 
 // @route   POST api/users/auth
 // @access  Public
@@ -204,16 +205,35 @@ const updateUserRole = asyncHandler(async (req, res) => {
   const { role, department } = req.body;
   const user = await User.findById(req.params.id);
   if (!user) {
-    res.status(404);
-    throw new Error('Kullanıcı bulunamadı');
+    return res.status(404).json({
+      message: 'Kullanıcı bulunamadı'
+    });
   }
+
+  const oldRole = user.role;
   user.role = role;
+  
   if (role === 'Jüri Üyesi' && department) {
     user.department = department;
   } else if (role !== 'Jüri Üyesi') {
     user.department = null;
   }
+  
   const updatedUser = await user.save();
+
+  try {
+    await createNotification({
+      recipientId: user._id,
+      type: 'system',
+      title: `${role} Rol Değişikliği`,
+      message: `${oldRole} olan rolünüz ${role} olarak değiştirildi.`,
+      relatedId: user._id,
+      refModel: 'User',
+      url: '/profile',
+    });
+  } catch (error) {
+  }
+
   res.status(200).json({
     _id: updatedUser._id,
     name: updatedUser.name,

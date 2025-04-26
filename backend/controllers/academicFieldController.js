@@ -20,7 +20,7 @@ const getAcademicFieldById = asyncHandler(async (req, res) => {
 });
 
 // @route   POST /api/academic-fields
-// @access  Private/Yönetici
+// @access  Private/Admin
 const createAcademicField = asyncHandler(async (req, res) => {
   const academicField = new AcademicField(req.body);
   const newAcademicField = await academicField.save();
@@ -28,7 +28,7 @@ const createAcademicField = asyncHandler(async (req, res) => {
 });
 
 // @route   PUT /api/academic-fields/:id
-// @access  Private/Yönetici
+// @access  Private/Admin
 const updateAcademicField = asyncHandler(async (req, res) => {
   const updatedAcademicField = await AcademicField.findByIdAndUpdate(
     req.params.id, 
@@ -45,7 +45,7 @@ const updateAcademicField = asyncHandler(async (req, res) => {
 });
 
 // @route   DELETE /api/academic-fields/:id
-// @access  Private/Yönetici
+// @access  Private/Admin
 const deleteAcademicField = asyncHandler(async (req, res) => {
   const deletedAcademicField = await AcademicField.findByIdAndDelete(req.params.id);
   

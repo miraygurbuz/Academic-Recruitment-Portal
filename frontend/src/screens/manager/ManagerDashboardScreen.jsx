@@ -8,25 +8,18 @@ const ManagerDashboardScreen = () => {
 
   const {
     data: pendingReviews = 0,
-    isLoading: isLoadingPending,
-    error: pendingError
   } = useGetPendingApplicationCountQuery();
 
   const { 
     data: totalUsers = 0, 
-    isLoading: isLoadingUsers, 
-    error: usersError 
   } = useGetUserCountQuery();
   
   const { 
     data: activePositions = 0, 
-    isLoading: isLoadingPositions, 
-    error: positionsError 
   } = useGetActiveJobCountQuery();
 
   const { 
     data: applicationsData, 
-    isLoading 
 } = useGetApplicationsQuery();
 
 const totalApplications = applicationsData?.totalApplications || 0;

@@ -11,9 +11,10 @@ import {
   getActiveJobCount,
   getJobJuryMembers,
   assignJuryMembers,
-  clearJuryMembers
+  clearJuryMembers,
+  getJuryAssignedJobs
 } from '../controllers/jobController.js';
-import { protect, admin } from '../middleware/authMiddleware.js';
+import { protect, admin, jury } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
@@ -28,5 +29,6 @@ router.patch('/:id/status', protect, admin, updateJobStatus);
 router.delete('/:id', protect, admin, deleteJob);
 router.delete('/:id/jurymembers', protect, admin, clearJuryMembers);
 router.route('/:id/jurymembers').get(protect, admin, getJobJuryMembers).put(protect, admin, assignJuryMembers);
+router.get('/jury/assigned', protect, jury, getJuryAssignedJobs);
 
 export default router;

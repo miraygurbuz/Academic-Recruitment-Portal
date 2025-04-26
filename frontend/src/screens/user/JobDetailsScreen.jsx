@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Container, Card, Button, Row, Col, Badge, Spinner, Alert, Tooltip, OverlayTrigger } from 'react-bootstrap';
+import { Container, Card, Button, Row, Col, Badge, Alert, Tooltip, OverlayTrigger } from 'react-bootstrap';
 import { FaShareAlt, FaCheck, FaClipboardCheck } from 'react-icons/fa';
 import { useGetJobByIdQuery } from '../../slices/jobsApiSlice';
 import { useGetMyApplicationsQuery } from '../../slices/applicationsApiSlice';
@@ -8,6 +8,7 @@ import { useSelector } from 'react-redux';
 import { formatDate } from '../../utils/helpers';
 import BackButton from '../../components/common/BackButton';
 import { getStatusBadge } from '../../utils/badges';
+import Loader from '../../components/common/Loader';
 
 const JobDetailsScreen = () => {
     const { id } = useParams();
@@ -51,12 +52,7 @@ const JobDetailsScreen = () => {
     
     if (isLoading) {
         return (
-            <Container className='d-flex justify-content-center align-items-center' style={{ minHeight: '100vh' }}>
-                <div className='text-center'>
-                    <Spinner animation='border' variant='success' />
-                    <p className='mt-2'>İlan bilgileri yükleniyor...</p>
-                </div>
-            </Container>
+            <Loader />
         );
     }
 

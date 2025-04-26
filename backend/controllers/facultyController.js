@@ -22,7 +22,7 @@ const getFacultyById = asyncHandler(async (req, res) => {
 });
 
 // @route   POST /api/faculties
-// @access  Private/Yönetici
+// @access  Private/Admin
 const createFaculty = asyncHandler(async (req, res) => {
   const faculty = new Faculty(req.body);
   const newFaculty = await faculty.save();
@@ -30,7 +30,7 @@ const createFaculty = asyncHandler(async (req, res) => {
 });
 
 // @route   PUT /api/faculties/:id
-// @access  Private/Yönetici
+// @access  Private/Admin
 const updateFaculty = asyncHandler(async (req, res) => {
   const updatedFaculty = await Faculty.findByIdAndUpdate(
     req.params.id, 
@@ -47,7 +47,7 @@ const updateFaculty = asyncHandler(async (req, res) => {
 });
 
 // @route   DELETE /api/faculties/:id
-// @access  Private/Yönetici
+// @access  Private/Admin
 const deleteFaculty = asyncHandler(async (req, res) => {
   const deletedFaculty = await Faculty.findByIdAndDelete(req.params.id);
   

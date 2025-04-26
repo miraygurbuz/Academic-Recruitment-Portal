@@ -1,10 +1,28 @@
 import { apiSlice } from './apiSlice';
 
+const APPLICATIONS_URL = '/api/applications';
+
+const convertToFormData = (data) => {
+    const formData = new FormData();
+    Object.keys(data).forEach(key => {
+      if (key === 'documents' && Array.isArray(data.documents)) {
+        data.documents.forEach(file => {
+          formData.append('documents', file);
+        });
+      } else if (typeof data[key] === 'object' && data[key] !== null) {
+        formData.append(key, JSON.stringify(data[key]));
+      } else {
+        formData.append(key, data[key]);
+      }
+    });
+    return formData;
+  };
+
 export const applicationsApiSlice = apiSlice.injectEndpoints({
     endpoints: (builder) => ({
         getApplications: builder.query({
             query: (params) => ({
-                url: '/api/applications/applications',
+                url: `${APPLICATIONS_URL}/applications`,
                 method: 'GET',
                 params
             }),
@@ -13,7 +31,7 @@ export const applicationsApiSlice = apiSlice.injectEndpoints({
 
         getMyApplications: builder.query({
             query: () => ({
-                url: '/api/applications/my',
+                url: `${APPLICATIONS_URL}/my`,
                 method: 'GET'
             }),
             providesTags: ['Application']
@@ -21,27 +39,35 @@ export const applicationsApiSlice = apiSlice.injectEndpoints({
 
         getApplicationById: builder.query({
             query: (id) => ({
-                url: `/api/applications/${id}`,
+                url: `${APPLICATIONS_URL}/${id}`,
                 method: 'GET'
             }),
             providesTags: (result, error, id) => [{ type: 'Application', id }]
         }),
 
         createApplication: builder.mutation({
-            query: (newApplication) => ({
-                url: '/api/applications',
-                method: 'POST',
-                body: newApplication
+            query: (formData) => ({
+              url: `${APPLICATIONS_URL}`,
+              method: 'POST',
+              body: formData
             }),
-            invalidatesTags: ['Application']
-        }),
+            invalidatesTags: ['Application'],
+            async prepareHeaders(headers) {
+              headers.delete('Content-Type');
+              return headers;
+            }
+          }),
 
         updateApplication: builder.mutation({
-            query: ({ id, ...updatedApplication }) => ({
-                url: `/api/applications/${id}`,
-                method: 'PUT',
-                body: updatedApplication
-            }),
+            query: ({ id, ...data }) => {
+                const formData = data instanceof FormData ? data : convertToFormData(data);
+                return {
+                    url: `${APPLICATIONS_URL}/${id}`,
+                    method: 'PUT',
+                    body: formData,
+                    formData: true
+                };
+            },
             invalidatesTags: (result, error, { id }) => [
                 { type: 'Application', id }
             ]
@@ -49,7 +75,7 @@ export const applicationsApiSlice = apiSlice.injectEndpoints({
 
         deleteApplication: builder.mutation({
             query: (id) => ({
-                url: `/api/applications/${id}`,
+                url: `${APPLICATIONS_URL}/${id}`,
                 method: 'DELETE'
             }),
             invalidatesTags: (result, error, id) => [
@@ -59,20 +85,20 @@ export const applicationsApiSlice = apiSlice.injectEndpoints({
 
         calculateApplicationPoints: builder.query({
             query: (id) => ({
-                url: `/api/applications/${id}/calculate-points`,
+                url: `${APPLICATIONS_URL}/${id}/calculate-points`,
                 method: 'GET'
             })
         }),
 
         checkApplicationCriteria: builder.query({
             query: (id) => ({
-                url: `/api/applications/${id}/check-criteria`,
+                url: `${APPLICATIONS_URL}/${id}/check-criteria`,
                 method: 'GET'
             })
         }),
         getJobApplications: builder.query({
             query: (jobId) => ({
-                url: `/api/applications/by-job/${jobId}`,
+                url: `${APPLICATIONS_URL}/by-job/${jobId}`,
                 method: 'GET'
             }),
             providesTags: ['Applications']
@@ -80,7 +106,7 @@ export const applicationsApiSlice = apiSlice.injectEndpoints({
 
         getApplicationPDF: builder.query({
             query: (id) => ({
-              url: `/api/applications/${id}`,
+              url: `${APPLICATIONS_URL}/${id}`,
               params: { includeDetails: true }
             }),
             keepUnusedDataFor: 60,

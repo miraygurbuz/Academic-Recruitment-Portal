@@ -1,66 +1,96 @@
 import Application from '../models/applicationModel.js';
 import asyncHandler from 'express-async-handler';
 import mongoose from 'mongoose';
+import Job from '../models/jobModel.js';
+import path from 'path';
+import { createNotification } from '../services/notificationService.js';
 
 // @route   POST /api/applications
 // @access  Private
 const createApplication = asyncHandler(async (req, res) => {
-    const {
-        jobId,
-        candidateId,
-        academicFieldId,
-        positionType,
-        status,
-        documents,
-        publications,
-        citations,
-        projects,
-        theses
-    } = req.body;
+  const {
+    jobId,
+    candidateId,
+    academicFieldId,
+    positionType,
+    status,
+  } = req.body;
 
-    const existingApplication = await Application.findOne({ 
-        jobId, 
-        candidateId 
-    });
-
-    if (existingApplication) {
-        res.status(400);
-        throw new Error('Bu ilana daha önce başvuru yaptınız');
+  const parseIfString = (field) => {
+    if (typeof field === 'string') {
+      try {
+        return JSON.parse(field);
+      } catch {
+        return [];
+      }
     }
+    return field;
+  };
 
-    if (!jobId || !candidateId || !academicFieldId || !positionType) {
-        res.status(400);
-        throw new Error('Tüm zorunlu alanlar gereklidir');
-    }
+  const publications = parseIfString(req.body.publications);
+  const citations = parseIfString(req.body.citations);
+  const projects = parseIfString(req.body.projects);
+  const theses = parseIfString(req.body.theses);
 
-    const validPublications = Array.isArray(publications) ?
-        publications.filter(pub => pub.title && pub.category) : [];
+  const existingApplication = await Application.findOne({ 
+    jobId, 
+    candidateId 
+  });
 
-    const validCitations = Array.isArray(citations) ?
-        citations.filter(citation => citation.category && citation.publicationTitle) : [];
+  if (existingApplication) {
+    res.status(400);
+    throw new Error('Bu ilana daha önce başvuru yaptınız');
+  }
 
-    const validProjects = Array.isArray(projects) ?
-        projects.filter(project => project.category && project.title && project.role) : [];
+  if (!jobId || !candidateId || !academicFieldId || !positionType) {
+    res.status(400);
+    throw new Error('Tüm zorunlu alanlar gereklidir');
+  }
 
-    const validTheses = Array.isArray(theses) ?
-        theses.filter(thesis => thesis.category && thesis.studentName && thesis.title) : [];
-
-    const application = new Application({
-        jobId,
-        candidateId,
-        academicFieldId,
-        positionType,
-        status: status || 'Beklemede',
-        documents: documents || [],
-        publications: validPublications,
-        citations: validCitations,
-        projects: validProjects,
-        theses: validTheses,
-        submittedAt: new Date()
+  const uploadedDocuments = [];
+  if (req.files && req.files.length > 0) {
+    req.files.forEach(file => {
+      uploadedDocuments.push({
+        type: path.basename(file.originalname, path.extname(file.originalname)),
+        fileUrl: `/uploads/${file.filename}`,
+        originalName: file.originalname,
+        uploadedAt: new Date()
+      });
     });
+  }
 
-    const createdApplication = await application.save();
-    res.status(201).json(createdApplication);
+  const validPublications = Array.isArray(publications)
+    ? publications.filter(pub => pub.title && pub.category)
+    : [];
+
+  const validCitations = Array.isArray(citations)
+    ? citations.filter(citation => citation.category && citation.publicationTitle)
+    : [];
+
+  const validProjects = Array.isArray(projects)
+    ? projects.filter(project => project.category && project.title)
+    : [];
+
+  const validTheses = Array.isArray(theses)
+    ? theses.filter(thesis => thesis.category && thesis.studentName && thesis.title)
+    : [];
+
+  const application = new Application({
+    jobId,
+    candidateId,
+    academicFieldId,
+    positionType,
+    status: status || 'Beklemede',
+    documents: uploadedDocuments,
+    publications: validPublications,
+    citations: validCitations,
+    projects: validProjects,
+    theses: validTheses,
+    submittedAt: new Date()
+  });
+
+  const createdApplication = await application.save();
+  res.status(201).json(createdApplication);
 });
 
 // @route   GET /api/applications/my
@@ -137,13 +167,23 @@ const getApplicationById = asyncHandler(async (req, res) => {
         .populate('candidateId', 'name surname email tcKimlik')
         .populate({
             path: 'jobId',
-            select: 'title department faculty',
-            populate: {
-                path: 'department',
-                select: 'name faculty'
-            }
+            select: 'title department faculty juryMembers',
+            populate: [
+                {
+                    path: 'department',
+                    select: 'name faculty'
+                },
+                {
+                    path: 'juryMembers.user',
+                    select: 'name surname email'
+                }
+            ]
         })
-        .populate('academicFieldId', 'name');
+        .populate('academicFieldId', 'name')
+        .populate({
+            path: 'juryEvaluations.juryMember',
+            select: 'name surname email'
+        });
 
     if (includeDetails) {
         query = query
@@ -162,7 +202,7 @@ const getApplicationById = asyncHandler(async (req, res) => {
     }
 
     if (req.user.role !== 'Admin' && 
-        req.user.role !== 'Yönetici' && 
+        req.user.role !== 'Yönetici' &&
         application.candidateId._id.toString() !== req.user._id.toString()) {
         res.status(403);
         throw new Error('Bu başvuruyu görüntüleme yetkiniz yok');
@@ -267,49 +307,318 @@ const deleteApplication = asyncHandler(async (req, res) => {
 // @route   PUT /api/applications/:id
 // @access  Private/Admin, Yönetici
 const updateApplication = asyncHandler(async (req, res) => {
-    const { id } = req.params;
-    const { status } = req.body;
+  const { id } = req.params;
+  const { status } = req.body;
 
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-        res.status(400);
-        throw new Error('Geçersiz başvuru ID\'si');
-    }
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+      res.status(400);
+      throw new Error('Geçersiz başvuru ID\'si');
+  }
 
-    const application = await Application.findById(id);
+  const application = await Application.findById(id);
 
-    if (!application) {
-        res.status(404);
-        throw new Error('Başvuru bulunamadı');
-    }
+  if (!application) {
+      res.status(404);
+      throw new Error('Başvuru bulunamadı');
+  }
 
-    if (req.user.role !== 'Admin' && req.user.role !== 'Yönetici') {
-        res.status(403);
-        throw new Error('Bu işlemi gerçekleştirme yetkiniz yok');
-    }
-    if (status) {
-        const validStatuses = ['Beklemede', 'Onaylandı', 'Reddedildi'];
-        if (!validStatuses.includes(status)) {
+  if (req.user.role !== 'Admin' && req.user.role !== 'Yönetici') {
+      res.status(403);
+      throw new Error('Bu işlemi gerçekleştirme yetkiniz yok');
+  }
+  if (status) {
+      const validStatuses = ['Beklemede', 'Onaylandı', 'Reddedildi'];
+      if (!validStatuses.includes(status)) {
+          res.status(400);
+          throw new Error('Geçersiz başvuru durumu');
+      }
+
+      if (application.status === 'Onaylandı' || application.status === 'Reddedildi') {
+          res.status(400);
+          throw new Error('Başvuru onay/ret işlemleri tamamlandığından değişiklik yapamazsınız');
+      }
+      
+      if (status === 'Onaylandı' || status === 'Reddedildi') {
+          const job = await Job.findById(application.jobId).populate('juryMembers.user');
+          
+          if (!job) {
+              res.status(404);
+              throw new Error('İlgili ilan bulunamadı');
+          }
+          
+          const juryMemberCount = job.juryMembers.length;
+          const evaluationCount = application.juryEvaluations ? application.juryEvaluations.length : 0;
+          
+          if (juryMemberCount === 0){
             res.status(400);
-            throw new Error('Geçersiz başvuru durumu');
+            throw new Error('Jüri üyesi atanmadan ve jüri değerlendirmeleri tamamlanmadan başvuru onaylanamaz/reddedilemez');
+          }
+
+          if (evaluationCount < juryMemberCount) {
+              res.status(400);
+              throw new Error('Tüm jüri üyeleri değerlendirme yapmadan başvuru onaylanamaz/reddedilemez');
+          }
+          
+          application.completedAt = new Date();
+          
+          try {
+            await createNotification({
+              recipientId: application.candidateId,
+              type: 'status',
+              title: `Başvurunuz ${status === 'Onaylandı' ? 'onaylandı' : 'reddedildi'}`,
+              message: `${job.title} ilanına yaptığınız başvuru ${status.toLowerCase()}.`,
+              relatedId: application._id,
+              refModel: 'Application',
+              url: `/my-applications/${application._id}`,
+            });
+          } catch (error) {}         
+      }
+
+      application.status = status;
+  }
+  
+  await application.calculatePoints();
+  await application.checkCriteria();
+  
+  if (status === 'Onaylandı' || status === 'Reddedildi') {
+    application.completedAt = new Date();
+  }
+
+  const updatedApplication = await application.save();
+
+  res.json(updatedApplication);
+});
+
+// @route   GET /api/applications/jury/job/:jobId
+// @access  Private/Jüri Üyesi
+const getJuryJobApplications = asyncHandler(async (req, res) => {
+  const juryId = req.user._id;
+  const { jobId } = req.params;
+  
+  const job = await Job.findById(jobId);
+  
+  if (!job) {
+    res.status(404);
+    throw new Error('İlan bulunamadı');
+  }
+  
+  const isAssigned = job.juryMembers.some(jury => 
+    jury.user.toString() === juryId.toString()
+  );
+  
+  if (!isAssigned) {
+    res.status(403);
+    throw new Error('Bu ilana atanmadınız');
+  }
+  
+  const applications = await Application.find({ jobId })
+    .populate('candidateId', 'name surname tcKimlik')
+    .populate('academicFieldId', 'name')
+    .select('status pointsSummary criteriaCheck submittedAt completedAt')
+    .sort('-submittedAt');
+  
+  res.status(200).json(applications);
+});
+
+// @route   GET /api/applications/jury/:applicationId
+// @access  Private/Jüri Üyesi
+const getApplicationByIdForJury = asyncHandler(async (req, res) => {
+  const juryId = req.user._id;
+  const { applicationId } = req.params;
+  const includeDetails = req.query.includeDetails === 'true';
+  
+  let query = Application.findById(applicationId)
+    .populate('candidateId', 'name surname email tcKimlik')
+    .populate({
+      path: 'jobId',
+      select: 'title department juryMembers',
+      populate: {
+        path: 'department',
+        select: 'name faculty',
+        populate: {
+          path: 'faculty',
+          select: 'name'
         }
+      }
+    })
+    .populate('academicFieldId', 'name')
+    .populate({
+      path: 'juryEvaluations.juryMember',
+      select: 'name surname'
+    });
+  
+  if (includeDetails) {
+    query = query
+      .populate('publications')
+      .populate('citations')
+      .populate('projects')
+      .populate('theses')
+      .populate('pointsSummary');
+  }
+  
+  const application = await query;
+  
+  if (!application) {
+    res.status(404);
+    throw new Error('Başvuru bulunamadı');
+  }
+  
+  const isAssigned = application.jobId.juryMembers.some(jury => 
+    jury.user && jury.user.toString() === juryId.toString()
+  );
+  
+  if (!isAssigned) {
+    res.status(403);
+    throw new Error('Bu başvuruyu değerlendirme yetkiniz yok');
+  }
+  
+  const response = application.toObject();
+  response.juryEvaluations = application.juryEvaluations.filter(
+    evaluation => evaluation.juryMember && evaluation.juryMember._id.toString() === juryId.toString()
+  );
+     
+  res.status(200).json(response);
+});
 
-        if (application.status === 'Onaylandı' || application.status === 'Reddedildi') {
-            res.status(400);
-            throw new Error('Başvuru onay/ret işlemleri tamamlandığından değişiklik yapamazsınız');
-        }
+// @route   POST /api/applications/jury/:applicationId/evaluate
+// @access  Private/Jüri Üyesi
+const evaluateApplication = asyncHandler(async (req, res) => {
+  const juryId = req.user._id;
+  const { applicationId } = req.params;
+  const { result, comments } = req.body;
+  
+  if (!['Olumlu', 'Olumsuz'].includes(result)) {
+    res.status(400);
+    throw new Error('Geçersiz değerlendirme sonucu. Olumlu veya Olumsuz olmalıdır.');
+  }
+  
+  const application = await Application.findById(applicationId);
+  if (!application) {
+    res.status(404);
+    throw new Error('Başvuru bulunamadı');
+  }
+  
+  const job = await Job.findById(application.jobId);
+  if (!job) {
+    res.status(404);
+    throw new Error('İlan bulunamadı');
+  }
+  
+  if (job.status !== 'Değerlendirme') {
+    res.status(403);
+    throw new Error('Bu başvuru şu anda değerlendirmeye açık değil. İlanın durumu "Değerlendirme" olmalıdır.');
+  }
+  
+  const isAssigned = job.juryMembers.some(jury => 
+    jury.user.toString() === juryId.toString()
+  );
+  
+  if (!isAssigned) {
+    res.status(403);
+    throw new Error('Bu başvuruyu değerlendirme yetkiniz yok');
+  }
+  
+  const evaluationIndex = application.juryEvaluations.findIndex(
+    evaluation => evaluation.juryMember.toString() === juryId.toString()
+  );
+  
+  if (evaluationIndex >= 0) {
+    res.status(400);
+    throw new Error('Bu başvuru için zaten bir değerlendirme yapmışsınız. Tekrar değerlendirme yapamazsınız.');
+  }
+  
+  let reportData = {};
+  if (req.file) {
+    reportData = {
+      reportFileUrl: `/uploads/${req.file.filename}`,
+      reportOriginalName: req.file.originalname
+    };
+  }
+  
+  application.juryEvaluations.push({
+    juryMember: juryId,
+    result,
+    comments,
+    ...reportData,
+    evaluatedAt: Date.now()
+  });
+  
+  await application.save();
+  
+  res.status(200).json({ 
+    message: 'Değerlendirme başarıyla kaydedildi',
+    evaluation: application.juryEvaluations.find(e => e.juryMember.toString() === juryId.toString())
+  });
+});
 
-        application.status = status;
-        
-        if (status === 'Onaylandı' || status === 'Reddedildi') {
-            application.completedAt = new Date();
-        }
-    }
-    await application.calculatePoints();
-    await application.checkCriteria();
+// @route   PUT /api/applications/jury/:applicationId/evaluate
+// @access  Private/Jüri Üyesi
+const updateEvaluation = asyncHandler(async (req, res) => {
+  const juryId = req.user._id;
+  const { applicationId } = req.params;
+  const { result, comments } = req.body;
 
-    const updatedApplication = await application.save();
+  if (!['Olumlu', 'Olumsuz'].includes(result)) {
+    res.status(400);
+    throw new Error('Geçersiz değerlendirme sonucu. Olumlu veya Olumsuz olmalıdır.');
+  }
+  
+  const application = await Application.findById(applicationId);
+  if (!application) {
+    res.status(404);
+    throw new Error('Başvuru bulunamadı');
+  }
 
-    res.json(updatedApplication);
+  if (application.status !== 'Beklemede') {
+    return res.status(403).json({
+      message: 'Başvuru nihai karara ulaşmış. Jüri değerlendirmesinde değişiklik yapılamaz.'
+    });
+  }
+  
+  const job = await Job.findById(application.jobId);
+  if (!job) {
+    res.status(404);
+    throw new Error('İlan bulunamadı');
+  }
+  
+  if (job.status !== 'Değerlendirme') {
+    res.status(403);
+    throw new Error('Bu başvuru şu anda değerlendirmeye açık değil. İlanın durumu "Değerlendirme" olmalıdır.');
+  }
+  
+  const isAssigned = job.juryMembers.some(jury => 
+    jury.user.toString() === juryId.toString()
+  );
+  
+  if (!isAssigned) {
+    res.status(403);
+    throw new Error('Bu başvuruyu değerlendirme yetkiniz yok');
+  }
+  
+  const evaluationIndex = application.juryEvaluations.findIndex(
+    evaluation => evaluation.juryMember.toString() === juryId.toString()
+  );
+  
+  if (evaluationIndex === -1) {
+    res.status(404);
+    throw new Error('Güncellenecek bir değerlendirme bulunamadı. Önce değerlendirme yapmalısınız.');
+  }
+  
+  application.juryEvaluations[evaluationIndex].result = result;
+  application.juryEvaluations[evaluationIndex].comments = comments;
+  application.juryEvaluations[evaluationIndex].updatedAt = Date.now();
+  
+  if (req.file) {
+    application.juryEvaluations[evaluationIndex].reportFileUrl = `/uploads/${req.file.filename}`;
+    application.juryEvaluations[evaluationIndex].reportOriginalName = req.file.originalname;
+  }
+  
+  await application.save();
+  
+  res.status(200).json({ 
+    message: 'Değerlendirme başarıyla güncellendi',
+    evaluation: application.juryEvaluations[evaluationIndex]
+  });
 });
 
 export { 
@@ -322,5 +631,9 @@ export {
     getJobApplications,
     getPendingApplicationCount,
     deleteApplication,
-    updateApplication
+    updateApplication,
+    getJuryJobApplications,
+    getApplicationByIdForJury,
+    evaluateApplication,
+    updateEvaluation,
 };

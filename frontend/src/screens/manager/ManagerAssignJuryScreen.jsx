@@ -265,7 +265,7 @@ const ManagerAssignJuryScreen = () => {
                         <Card.Body className='d-flex flex-column align-items-center'>
                           <Card.Title className='mb-1 text-center'>{jury.name} {jury.surname}</Card.Title>
                           <Card.Text className='text-muted small'>
-                            {jury.department?.name || 'Departman Bilgisi Yok'}
+                            {jury.department?.name || 'Bölüm Bilgisi Yok'}
                           </Card.Text>
                           <Card.Text className='text-muted small'>
                             {jury.tcKimlik}

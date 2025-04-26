@@ -3,9 +3,10 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Form, Button, Container, Row, Col, Card, Spinner } from 'react-bootstrap';
 import { useGetJobByIdQuery, useUpdateJobMutation } from '../../slices/jobsApiSlice';
 import { useGetDepartmentsQuery } from '../../slices/fieldsApiSlice';
+import { toast } from 'react-toastify';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-import { toast } from 'react-toastify';
+import Loader from '../../components/common/Loader';
 
 const AdminJobEditScreen = () => {
   const { id } = useParams();
@@ -102,9 +103,7 @@ const AdminJobEditScreen = () => {
   
   if (isJobLoading || isDepartmentsLoading) {
     return (
-      <div className='d-flex justify-content-center align-items-center' style={{ minHeight: '50vh' }}>
-        <Spinner animation='border' variant='success' />
-      </div>
+      <Loader/>
     );
   }
   

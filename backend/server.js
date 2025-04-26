@@ -11,6 +11,9 @@ import departmentRoutes from './routes/departmentRoutes.js'
 import jobRoutes from './routes/jobRoutes.js'
 import facultyRoutes from './routes/facultyRoutes.js'
 import applicationRoutes from './routes/applicationRoutes.js';
+import notificationRoutes from './routes/notificationRoutes.js'
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 connectDB();
 
@@ -20,6 +23,9 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use(cookieParser());
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.use('/api/users', userRoutes);
 app.use('/api/academic-fields', academicFieldRoutes);
@@ -27,6 +33,7 @@ app.use('/api/faculties', facultyRoutes);
 app.use('/api/jobs', jobRoutes);
 app.use('/api/departments', departmentRoutes);
 app.use('/api/applications', applicationRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 app.get('/', (req, res) => res.send('Server is ready'));
 

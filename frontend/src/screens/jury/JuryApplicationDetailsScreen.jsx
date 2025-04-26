@@ -1,26 +1,55 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Table, Badge, Button, Tabs, Tab, Alert } from 'react-bootstrap';
-import { Link } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { 
-  useGetApplicationByIdQuery, 
-  useCalculateApplicationPointsQuery,
-  useCheckApplicationCriteriaQuery 
-} from '../../slices/applicationsApiSlice';
-import ApplicationStatusActions from './ApplicationStatusActions';
+  useGetJuryApplicationDetailsQuery, 
+  useEvaluateApplicationMutation,
+  useUpdateEvaluationMutation
+} from '../../slices/juryApiSlice';
+import { FaInfo, FaFile, FaDownload, FaEdit } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import { useSelector } from 'react-redux';
+import Loader from '../../components/common/Loader';
 import BackButton from '../../components/common/BackButton';
-import Loader from '../common/Loader';
-import { formatDate } from '../../utils/helpers';
-import { FaDownload } from 'react-icons/fa';
 
-const ApplicationDetails = ({ applicationId, onBack }) => {
-  const id = applicationId;
+const JuryApplicationDetailsScreen = () => {
+  const { applicationId } = useParams();
   const { userInfo } = useSelector((state) => state.auth);
+  
   const [activeTab, setActiveTab] = useState('overview');
-  const { data: application, isLoading, refetch, error } = useGetApplicationByIdQuery(id);
-  const { refetch: refetchPoints } = useCalculateApplicationPointsQuery(id);
-  const { refetch: refetchCriteria } = useCheckApplicationCriteriaQuery(id);
+  const [result, setResult] = useState('');
+  const [comments, setComments] = useState('');
+  const [hasExistingEvaluation, setHasExistingEvaluation] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [existingResult, setExistingResult] = useState('');
+  const [reportFile, setReportFile] = useState(null);
+  const [reportFileName, setReportFileName] = useState('');
+  
+  const { data: application, isLoading, refetch, error } = useGetJuryApplicationDetailsQuery(applicationId);
+  const [evaluateApplication, { isLoading: isEvaluating }] = useEvaluateApplicationMutation();
+  const [updateEvaluation, { isLoading: isUpdating }] = useUpdateEvaluationMutation();
+  
+  useEffect(() => {
+    if (application) {
+      const myEvaluation = application.juryEvaluations.find(
+        evaluation => evaluation.juryMember._id === userInfo._id
+      );
+      
+      if (myEvaluation) {
+        setResult(myEvaluation.result);
+        setExistingResult(myEvaluation.result);
+        setComments(myEvaluation.comments || '');
+        setHasExistingEvaluation(true);
+        
+        if (myEvaluation.reportFileUrl) {
+          const fileName = myEvaluation.reportFileUrl.split('/').pop();
+          setReportFileName(myEvaluation.reportOriginalName || fileName);
+        }
+      } else {
+        setIsEditing(true);
+      }
+    }
+  }, [application, userInfo._id]);
 
   const downloadFile = (filename) => {
     const downloadUrl = `/api/applications/download-file/${filename}`;
@@ -51,25 +80,58 @@ const ApplicationDetails = ({ applicationId, onBack }) => {
       });
   };
 
-  const recalculatePoints = async () => {
-    try {
-      await refetchPoints();
-      await refetchCriteria();
-      await refetch();
-      toast.success('Puanlar yeniden hesaplandı');
-    } catch (err) {
-      toast.error('Bir hata oluştu');
-    }
+  const handleToggleEdit = () => {
+    setIsEditing(!isEditing);
   };
-
-  const handleStatusChange = async (newStatus) => {
+  
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    setReportFile(file);
+    setReportFileName(file.name);
+  };
+  
+  const handleRemoveFile = () => {
+    setReportFile(null);
+    setReportFileName('');
+  };
+  
+  const handleSubmitEvaluation = async (e) => {
+    e.preventDefault();
+    
+    if (!result) {
+      toast.error('Lütfen bir değerlendirme sonucu seçiniz');
+      return;
+    }
+    
     try {
-      await refetchPoints();
-      await refetchCriteria();
+      const formData = new FormData();
+      formData.append('result', result);
+      formData.append('comments', comments);
+      
+      if (reportFile) {
+        formData.append('evaluationFile', reportFile);
+      }
+      
+      if (hasExistingEvaluation) {
+        await updateEvaluation({
+          applicationId,
+          evaluation: formData
+        }).unwrap();
+        toast.success('Değerlendirmeniz başarıyla güncellendi');
+      } else {
+        await evaluateApplication({
+          applicationId,
+          evaluation: formData
+        }).unwrap();
+        toast.success('Değerlendirmeniz başarıyla kaydedildi');
+      }
+      
+      setIsEditing(false);
       await refetch();
-      toast.success(`Başvuru durumu "${newStatus}" olarak güncellendi`);
-    } catch (error) {
-      toast.error('Başvuru güncellenirken bir hata oluştu');
+    } catch (err) {
+      toast.error(err?.data?.message || 'Değerlendirme yapılırken bir hata oluştu');
     }
   };
   
@@ -85,7 +147,7 @@ const ApplicationDetails = ({ applicationId, onBack }) => {
     return (
       <Container className='mt-4'>
         <Alert variant='danger'>
-          Başvuru yüklenirken bir hata oluştu: {error.message || 'Bilinmeyen hata'}
+          Başvuru yüklenirken bir hata oluştu: {error.data?.message || 'Bilinmeyen hata'}
         </Alert>
       </Container>
     );
@@ -103,9 +165,9 @@ const ApplicationDetails = ({ applicationId, onBack }) => {
     <Container className='mt-4 mb-5'>
       <Row className='mb-3'>
         <Col>
-        <BackButton />
+          <BackButton />
           <h2 className='mb-0'>
-            Başvuru Detayları - #{application._id.substring(0, 8)}
+            Başvuru Değerlendirme - #{application._id.substring(0, 8)}
           </h2>
           <p className='text-muted'>
             {application.positionType} - {new Date(application.createdAt).toLocaleDateString('tr-TR')}
@@ -147,7 +209,7 @@ const ApplicationDetails = ({ applicationId, onBack }) => {
                     <Card.Body>
                       <Table responsive borderless>
                         <tbody>
-                        <tr>
+                          <tr>
                             <td className='fw-bold' width='40%'>TC Kimlik No:</td>
                             <td>{application.candidateId?.tcKimlik}</td>
                           </tr>
@@ -170,10 +232,10 @@ const ApplicationDetails = ({ applicationId, onBack }) => {
                           <tr>
                             <td className='fw-bold'>İlan:</td>
                             <td>
-                            <Link to={`/${userInfo?.role === 'Admin' ? 'admin' : 
-                                         userInfo?.role === 'Yönetici' ? 'manager' : 
-                                         userInfo?.role === 'Jüri Üyesi' ? 'jury' : 'admin'}/jobs/${application.jobId?._id}`} 
-                                    className='text-success fw-bold'>
+                              <Link 
+                                to={`/jury/jobs/${application.jobId?._id}`}
+                                className='text-success fw-bold'
+                              >
                                 {application.jobId?.title || 'İlan bilgisi bulunamadı'}
                               </Link>
                             </td>
@@ -184,14 +246,6 @@ const ApplicationDetails = ({ applicationId, onBack }) => {
                               {application.submittedAt 
                                 ? new Date(application.submittedAt).toLocaleDateString('tr-TR') 
                                 : 'Henüz tamamlanmadı'}
-                            </td>
-                          </tr>
-                          <tr>
-                            <td className='fw-bold'>Sonuçlanma Tarihi:</td>
-                            <td>
-                              {application.completedAt 
-                                ? new Date(application.completedAt).toLocaleDateString('tr-TR') 
-                                : 'Sonuçlanmadı'}
                             </td>
                           </tr>
                         </tbody>
@@ -236,15 +290,6 @@ const ApplicationDetails = ({ applicationId, onBack }) => {
                           </tr>
                         </tbody>
                       </Table>
-                      
-                      <Button 
-                        variant='outline-success' 
-                        size='sm' 
-                        className='mt-2'
-                        onClick={recalculatePoints}
-                      >
-                        Puanları Hesapla
-                      </Button>
                     </Card.Body>
                   </Card>
                 </Col>
@@ -328,60 +373,163 @@ const ApplicationDetails = ({ applicationId, onBack }) => {
                   </Card>
                   
                   <Card className='mb-3'>
-                    <Card.Header>Jüri Değerlendirmeleri</Card.Header>
+                    <Card.Header>Jüri Değerlendirmesi</Card.Header>
                     <Card.Body>
-                      {application.juryEvaluations && application.juryEvaluations.length > 0 ? (
-                        <Table responsive bordered size='sm'>
-                          <thead>
-                            <tr>
-                              <th>Jüri Üyesi</th>
-                              <th>Sonuç</th>
-                              <th>Değerlendirme Tarihi</th>
-                              <th>Rapor</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {application.juryEvaluations.map((evaluation, index) => (
-                              <tr key={index}>
-                                <td>{evaluation.juryMember?.name} {evaluation.juryMember?.surname}</td>
-                                <td>
-                                  <Badge 
-                                    bg={evaluation.result === 'Olumlu' ? 'success' : 'danger'}
-                                  >
-                                    {evaluation.result}
-                                  </Badge>
-                                </td>
-                                <td>{formatDate(evaluation.evaluatedAt)}</td>
-                                <td>
-                                  {evaluation.reportFileUrl ? (
-                                    <Button 
-                                      variant='outline-success' 
-                                      size='sm'
-                                      onClick={() => {
-                                        const fileName = evaluation.reportFileUrl.split('/').pop();
-                                        downloadFile(fileName);
-                                      }}
-                                    >
-                                      <FaDownload className="me-1" /> İndir
-                                    </Button>
-                                  ) : (
-                                    <Badge bg="secondary">Rapor Yok</Badge>
-                                  )}
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </Table>
-                      ) : (
-                        <Alert variant='info'>Jüri değerlendirmesi yapılmamış</Alert>
-                      )}
-                    </Card.Body>
-                  </Card>
+                        {hasExistingEvaluation && !isEditing ? (
+                        <div>
+                            <Alert variant="info" className="mb-3">
+                            <div className="d-flex justify-content-between align-items-center">
+                                <div>
+                                <h5 className="mb-1">Değerlendirme Sonucunuz</h5>
+                                <div className="mb-2">
+                                    <Badge bg={existingResult === 'Olumlu' ? 'success' : 'danger'} className="fs-6">
+                                    {existingResult}
+                                    </Badge>
+                                </div>
                                 
-                  <ApplicationStatusActions
-                    application={application} 
-                    userRole={userInfo.role}
-                    onStatusChange={handleStatusChange}/>
+                                {reportFileName && (
+                                    <div className="mt-3">
+                                    <h5 className="mb-1">Değerlendirme Raporunuz</h5>
+                                    <div className="d-flex align-items-center">
+                                        <FaFile className="text-success me-2" />
+                                        <span>{reportFileName}</span>
+                                        {application.juryEvaluations?.find(e => e.juryMember._id === userInfo._id)?.reportFileUrl && (
+                                          <Button 
+                                            variant="outline-success" 
+                                            size="sm" 
+                                            className="ms-2"
+                                            onClick={() => {
+                                              const evaluation = application.juryEvaluations.find(e => e.juryMember._id === userInfo._id);
+                                              if (evaluation?.reportFileUrl) {
+                                                const fileName = evaluation.reportFileUrl.split('/').pop();
+                                                downloadFile(fileName);
+                                              }
+                                            }}
+                                          >
+                                            <FaDownload /> İndir
+                                          </Button>
+                                        )}
+                                    </div>
+                                    </div>
+                                )}
+                                </div>
+                                
+                                <Button 
+                                variant="success" 
+                                className="align-self-start"
+                                onClick={handleToggleEdit}
+                                >
+                                <FaEdit className="me-2"/>
+                                 Düzenle
+                                </Button>
+                            </div>
+                            </Alert>
+                        </div>
+                        ) : (
+                        <form onSubmit={handleSubmitEvaluation}>
+                            <div className='mb-3'>
+                            <label className='fw-bold mb-2'>Değerlendirme Sonucu</label>
+                            <div className='mb-2'>
+                                <div className='form-check mb-2'>
+                                <input
+                                    className='form-check-input'
+                                    type='radio'
+                                    id='result-positive'
+                                    value='Olumlu'
+                                    checked={result === 'Olumlu'}
+                                    onChange={(e) => setResult(e.target.value)}
+                                />
+                                <label className='form-check-label' htmlFor='result-positive'>
+                                    Olumlu
+                                </label>
+                                </div>
+                                <div className='form-check'>
+                                <input
+                                    className='form-check-input'
+                                    type='radio'
+                                    id='result-negative'
+                                    value='Olumsuz'
+                                    checked={result === 'Olumsuz'}
+                                    onChange={(e) => setResult(e.target.value)}
+                                />
+                                <label className='form-check-label' htmlFor='result-negative'>
+                                    Olumsuz
+                                </label>
+                                </div>
+                            </div>
+                            </div>
+                            
+                            <div className='mb-3'>
+                            <label className='fw-bold mb-2'>Değerlendirme Raporu</label>
+                            {reportFileName ? (
+                                <div className='border rounded p-3 mb-3'>
+                                <div className='d-flex justify-content-between align-items-center'>
+                                    <div className='d-flex align-items-center'>
+                                    <FaFile className='text-success me-2' />
+                                    <span className='text-truncate' style={{ maxWidth: '200px' }}>
+                                        {reportFileName}
+                                    </span>
+                                    </div>
+                                    <Button
+                                    variant='outline-danger'
+                                    size='sm'
+                                    onClick={handleRemoveFile}
+                                    >
+                                    Değiştir
+                                    </Button>
+                                </div>
+                                </div>
+                            ) : (
+                                <div className='border rounded p-3 mb-3'>
+                                <input
+                                    type='file'
+                                    id='report-file'
+                                    accept='.pdf,.doc,.docx'
+                                    onChange={handleFileChange}
+                                    className='form-control'
+                                />
+                                <small className='text-muted d-block mt-2'>
+                                    PDF veya Word dosyası seçiniz.
+                                </small>
+                                </div>
+                            )}
+                            </div>
+                            
+                            <Alert variant='info' className='d-flex align-items-center mb-3'>
+                            <FaInfo className='text-primary me-2' />
+                            <div>
+                                {hasExistingEvaluation 
+                                ? 'Değerlendirmenizi güncelleyebilirsiniz.' 
+                                : 'Lütfen rapor hazırlayarak yükleyiniz.'}
+                            </div>
+                            </Alert>
+                            
+                            <div className="d-flex gap-2">
+                            {hasExistingEvaluation && (
+                                <Button 
+                                variant='secondary' 
+                                className='flex-grow-1'
+                                onClick={handleToggleEdit}
+                                >
+                                İptal
+                                </Button>
+                            )}
+                            
+                            <Button 
+                                variant='success' 
+                                type='submit' 
+                                className='flex-grow-1'
+                                disabled={isEvaluating || isUpdating || (!hasExistingEvaluation && !reportFile)}
+                            >
+                                {isEvaluating || isUpdating
+                                ? 'Kaydediliyor...' 
+                                : hasExistingEvaluation ? 'Değerlendirmeyi Güncelle' : 'Değerlendirmeyi Kaydet'}
+                            </Button>
+                            </div>
+                        </form>
+                        )}
+                    </Card.Body>
+                    </Card>
                 </Col>
               </Row>
             </Tab>
@@ -532,7 +680,7 @@ const ApplicationDetails = ({ applicationId, onBack }) => {
                     {application.documents.map((doc, index) => (
                       <tr key={index}>
                         <td>{doc.type}</td>
-                        <td>{formatDate(doc.uploadedAt)}</td>
+                        <td>{new Date(doc.uploadedAt).toLocaleDateString('tr-TR')}</td>
                         <td>
                         <Button 
                         variant="outline-success" 
@@ -560,8 +708,4 @@ const ApplicationDetails = ({ applicationId, onBack }) => {
   );
 };
 
-ApplicationDetails.defaultProps = {
-  onBack: null,
-};
-
-export default ApplicationDetails;
+export default JuryApplicationDetailsScreen;

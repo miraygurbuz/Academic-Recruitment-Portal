@@ -5,6 +5,7 @@ import { formatDate } from '../../utils/helpers';
 import { FaEye, FaSignOutAlt } from 'react-icons/fa';
 import { Container, Row, Col, Card, Table, Badge, Button, Spinner, Alert, Modal } from 'react-bootstrap';
 import { toast } from 'react-toastify';
+import Loader from '../../components/common/Loader';
 
 const MyApplicationsScreen = () => {
   const { data: applications, isLoading, isError, error, refetch } = useGetMyApplicationsQuery();
@@ -43,10 +44,7 @@ const MyApplicationsScreen = () => {
 
   if (isLoading) {
     return (
-      <Container className='my-5 text-center'>
-        <Spinner animation='border' />
-        <p>Başvurularınız yükleniyor...</p>
-      </Container>
+      <Loader/>
     );
   }
 

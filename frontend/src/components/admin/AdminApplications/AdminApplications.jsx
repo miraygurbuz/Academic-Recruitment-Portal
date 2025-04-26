@@ -7,6 +7,7 @@ import { formatDate } from '../../../utils/helpers'
 import { toast } from 'react-toastify';
 import Pager from '../../common/Pager/Pager';
 import { getStatusBadge, getPositionBadge } from '../../../utils/badges';
+import Loader from '../../common/Loader';
 
 const ApplicationsList = () => {
     const navigate = useNavigate();
@@ -72,10 +73,7 @@ const ApplicationsList = () => {
     
     if (isLoading) {
       return (
-        <Container className='mt-4 text-center'>
-          <Spinner animation='border' variant='success' />
-          <p>Başvurular yükleniyor...</p>
-        </Container>
+        <Loader />
       );
     }
     
@@ -104,7 +102,7 @@ const ApplicationsList = () => {
           <Card.Header>
             <Row className='align-items-center'>
               <Col>
-                <h3 className='mb-0'>Başvurular</h3>
+                <h3 className='mb-0'>Son Başvurular</h3>
               </Col>
             </Row>
           </Card.Header>

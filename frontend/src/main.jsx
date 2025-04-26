@@ -36,6 +36,7 @@ import AdminJobsScreen from './screens/admin/AdminJobsScreen.jsx'
 import AdminDashboardScreen from './screens/admin/AdminDashboard/AdminDashboardScreen.jsx'
 import JobApplicationsList from './components/admin/AdminApplications/AdminApplicationsByJob.jsx'
 import AdminRoleManagementScreen from './screens/admin/AdminRoleManagementScreen.jsx'
+import AdminFieldsScreen from './screens/admin/AdminFieldsScreen.jsx'
 
 import ManagerAcademicFields from './screens/manager/ManagerAcademicFields/ManagerAcademicFieldsScreen.jsx'
 import ManagerAcademicFieldForm from './screens/manager/ManagerAcademicFields/ManagerAcademicFieldForm.jsx'
@@ -47,6 +48,13 @@ import ManagerJobsScreen from './screens/manager/ManagerJobsScreen.jsx'
 import ManagerJobDetailsScreen from './screens/manager/ManagerJobDetailsScreen.jsx'
 import ManagerJobApplicationsScreen from './screens/manager/ManagerJobApplicationsScreen.jsx'
 import ManagerAssignJuryScreen from './screens/manager/ManagerAssignJuryScreen.jsx'
+
+import JuryDashboardScreen from './screens/jury/JuryDashboardScreen.jsx'
+import JuryJobsScreen from './screens/jury/JuryJobsScreen.jsx'
+import JuryJobDetailsScreen from './screens/jury/JuryJobDetailsScreen.jsx'
+import JuryJobApplicationsScreen from './screens/jury/JuryJobApplicationsScreen.jsx'
+import JuryApplicationDetailsScreen from './screens/jury/JuryApplicationDetailsScreen.jsx'
+import JuryApplicationPDFScreen from './screens/jury/JuryApplicationPDFScreen.jsx'
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -77,6 +85,7 @@ const router = createBrowserRouter(
         <Route path='/admin/jobs/:id/edit' element={<AdminJobEditScreen />} />
         <Route path='/admin/jobs/:id/applications' element={<JobApplicationsList />} />
         <Route path='/admin/users' element={<AdminRoleManagementScreen />} />
+        <Route path='/admin/fields' element={<AdminFieldsScreen />} />
       </Route>
 
       <Route path='' element={<RoleBasedRoute allowedRoles={['Yönetici']} allowGuest={false} />}>
@@ -93,7 +102,12 @@ const router = createBrowserRouter(
       </Route>
 
       <Route path='' element={<RoleBasedRoute allowedRoles={['Jüri Üyesi']} allowGuest={false} />}>
-        <Route path='/jury/home' element={<AdminDashboardScreen />} />
+        <Route path='/jury/home' element={<JuryDashboardScreen />} />
+        <Route path='/jury/jobs' element={<JuryJobsScreen />}/>
+        <Route path='/jury/jobs/:id' element={<JuryJobDetailsScreen />} />
+        <Route path='/jury/jobs/:jobId/applications' element={<JuryJobApplicationsScreen />} />
+        <Route path='/jury/applications/:applicationId' element={<JuryApplicationDetailsScreen />} />
+        <Route path='/jury/applications/:id/PDF' element={<JuryApplicationPDFScreen />} />
       </Route>
       
       <Route path='*' element={<NotFoundScreen />} />

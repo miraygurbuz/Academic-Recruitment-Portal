@@ -1,15 +1,16 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Form, Button, Container, Row, Col, Card, Spinner } from 'react-bootstrap';
 import { useCreateJobMutation } from '../../slices/jobsApiSlice';
 import { useGetDepartmentsQuery } from '../../slices/fieldsApiSlice';
+import { toast } from 'react-toastify';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-import { toast } from 'react-toastify';
+import Loader from '../../components/common/Loader';
 
 const AdminJobCreationScreen = () => {
   const navigate = useNavigate();
-  const [createJob, { isLoading: isCreating, isSuccess, error }] = useCreateJobMutation();
+  const [createJob, { isLoading: isCreating }] = useCreateJobMutation();
   const { data: departments, isLoading: isDepartmentsLoading } = useGetDepartmentsQuery();
   
   const [formData, setFormData] = useState({
@@ -83,7 +84,7 @@ const AdminJobCreationScreen = () => {
   
   if (isDepartmentsLoading) {
     return (
-        <Spinner />
+        <Loader />
     );
   }
 

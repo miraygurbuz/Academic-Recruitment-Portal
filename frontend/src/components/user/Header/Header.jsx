@@ -1,11 +1,12 @@
 import { Navbar, Nav, NavDropdown, Container } from 'react-bootstrap';
-import { FaSignInAlt, FaUserPlus, FaUser, FaClipboardList, FaSignOutAlt } from 'react-icons/fa';
+import { FaSignInAlt, FaUserPlus, FaUser, FaClipboardList, FaSignOutAlt, FaBell } from 'react-icons/fa';
 import { useSelector, useDispatch } from 'react-redux';
 import { Link } from 'react-router-dom';
 import { useLogoutMutation } from '../../../slices/usersApiSlice';
 import { logout } from '../../../slices/authSlice';
 import Amblem from '../../common/Amblem';
 import './Header.css';
+import NotificationDropdown from '../../common/NotificationDropdown';
 
 const Header = () => {
     const { userInfo } = useSelector((state) => state.auth);
@@ -19,9 +20,7 @@ const Header = () => {
             await logoutApiCall().unwrap();
             dispatch(logout());
             window.location = '/';
-        } catch(error){
-            console.log(error);
-        }
+        } catch(error){}
     };
 
     return (
@@ -56,7 +55,13 @@ const Header = () => {
                                         </div>
                                         <span>Başvurularım</span>
                                     </Nav.Link>
+                                    
                                     <div className="vertical-divider d-none d-lg-block"></div>
+
+                                    <div className="nav-link-user mx-2 d-flex align-items-center">
+                                        <NotificationDropdown />
+                                    </div>                        
+                                                
                                     <NavDropdown
                                         title={
                                             <div className='d-inline-flex align-items-center'>

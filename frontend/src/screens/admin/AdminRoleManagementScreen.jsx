@@ -3,9 +3,10 @@ import { Container, Row, Col, Table, Button, Modal, Form, Spinner, Card } from '
 import { FaEdit, FaFilter } from 'react-icons/fa';
 import { useGetUsersQuery, useUpdateUserRoleMutation } from '../../slices/usersApiSlice';
 import { useGetDepartmentsQuery } from '../../slices/fieldsApiSlice';
-import Pager from '../../components/common/Pager/Pager';
 import { toast } from 'react-toastify';
 import { getRoleBadge } from '../../utils/badges.jsx';
+import Loader from '../../components/common/Loader.jsx';
+import Pager from '../../components/common/Pager/Pager';
 
 const allRoles = ['Admin', 'Jüri Üyesi', 'Aday', 'Yönetici'];
 
@@ -75,8 +76,7 @@ const AdminRoleManagementScreen = () => {
   if (isLoading) {
     return (
       <Container className='mt-4 text-center'>
-        <Spinner animation='border' variant='success' />
-        <p>Üyeler yükleniyor...</p>
+        <Loader />
       </Container>
     );
   }
@@ -217,13 +217,13 @@ const AdminRoleManagementScreen = () => {
 
               {newRole === 'Jüri Üyesi' && (
                 <Form.Group className='mb-3' controlId='departmentSelect'>
-                  <Form.Label>Departman</Form.Label>
+                  <Form.Label>Bölüm</Form.Label>
                   <Form.Select 
                     value={selectedDepartment} 
                     onChange={(e) => setSelectedDepartment(e.target.value)}
                     required
                   >
-                    <option value=''>Departman Seçin</option>
+                    <option value=''>Bölüm Seçin</option>
                     {departments?.map(dept => (
                       <option key={dept._id} value={dept._id}>
                         {dept.name} - {dept.faculty?.name || ''}
@@ -232,7 +232,7 @@ const AdminRoleManagementScreen = () => {
                   </Form.Select>
                   {newRole === 'Jüri Üyesi' && !selectedDepartment && (
                     <Form.Text className='text-danger'>
-                      Jüri üyesi için departman seçimi zorunludur.
+                      Jüri üyesi için bölüm seçimi zorunludur.
                     </Form.Text>
                   )}
                 </Form.Group>

@@ -1,13 +1,13 @@
 import React, { useRef, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Container, Button, Alert } from 'react-bootstrap';
-import { FaFilePdf, FaArrowLeft, FaPrint } from 'react-icons/fa';
-import { useGetApplicationPDFQuery } from '../../slices/applicationsApiSlice';
+import { FaFilePdf, FaPrint, FaArrowLeft } from 'react-icons/fa';
+import { useGetJuryApplicationPDFQuery } from '../../slices/juryApiSlice';
 import { formatDate } from '../../utils/helpers';
 import BackButton from '../../components/common/BackButton';
 import Loader from '../../components/common/Loader';
 
-const ManagerApplicationPDFScreen = () => {
+const JuryApplicationPDFScreen = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const reportRef = useRef(null);
@@ -15,11 +15,11 @@ const ManagerApplicationPDFScreen = () => {
   useEffect(() => {
     if (!id) {
       console.error("Geçersiz başvuru ID'si");
-      navigate('/manager/applications');
+      navigate('/jury/applications');
     }
   }, [id, navigate]);
 
-  const { data: application, isLoading, error } = useGetApplicationPDFQuery(id, {
+  const { data: application, isLoading, error } = useGetJuryApplicationPDFQuery(id, {
     skip: !id
   });
 
@@ -667,4 +667,4 @@ const ManagerApplicationPDFScreen = () => {
   );
 };
 
-export default ManagerApplicationPDFScreen;
+export default JuryApplicationPDFScreen;
