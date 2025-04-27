@@ -1,4 +1,5 @@
 import asyncHandler from 'express-async-handler';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { GetObjectCommand } from '@aws-sdk/client-s3';
 import s3Client, { s3Config } from '../config/s3Config.js';
 
@@ -22,16 +23,10 @@ export const downloadFile = asyncHandler(async (req, res) => {
       Bucket: s3Config.bucketName,
       Key: key
     });
-    
-    const response = await s3Client.send(command);
 
-    const contentType = response.ContentType || 'application/octet-stream';
-    const filename = key.split('/').pop();
+    const signedUrl = await getSignedUrl(s3Client, command, { expiresIn: 3 });
 
-    res.setHeader('Content-Type', contentType);
-    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-    
-    response.Body.pipe(res);
+    res.json({ signedUrl });
   } catch (error) {
     return res.status(500).json({
       error: 'Dosya indirme hatası',

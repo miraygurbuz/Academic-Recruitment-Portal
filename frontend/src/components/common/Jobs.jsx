@@ -37,7 +37,6 @@ const Jobs = () => {
         return Array.from(uniqueDepartments).sort();
     }, [jobs]);
     
-    // Filter jobs by department
     const filteredJobs = useMemo(() => {
         if (!jobs) return [];
         return selectedDepartment 

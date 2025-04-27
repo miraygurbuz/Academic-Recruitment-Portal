@@ -12,7 +12,8 @@ import { useSelector } from 'react-redux';
 import BackButton from '../../components/common/BackButton';
 import Loader from '../common/Loader';
 import { formatDate } from '../../utils/helpers';
-import { FaDownload } from 'react-icons/fa';
+import { FaDownload, FaEye } from 'react-icons/fa';
+import PreviewModal from '../../components/common/PreviewModal';
 
 const ApplicationDetails = ({ applicationId, onBack }) => {
   const id = applicationId;
@@ -21,44 +22,45 @@ const ApplicationDetails = ({ applicationId, onBack }) => {
   const { data: application, isLoading, refetch, error } = useGetApplicationByIdQuery(id);
   const { refetch: refetchPoints } = useCalculateApplicationPointsQuery(id);
   const { refetch: refetchCriteria } = useCheckApplicationCriteriaQuery(id);
-
+  
+  const [isModalVisible, setModalVisible] = useState(false);
+  const [modalFileUrl, setModalFileUrl] = useState('');
+ 
   const downloadFile = (fileUrl) => {
     const downloadUrl = `/api/applications/download?url=${encodeURIComponent(fileUrl)}`;
+    
     fetch(downloadUrl)
       .then(response => {
         if (!response.ok) {
           throw new Error('Dosya indirilemedi');
         }
-        const contentDisposition = response.headers.get('Content-Disposition');
-        let suggestedFilename = '';
-        
-        if (contentDisposition) {
-          const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
-          if (filenameMatch && filenameMatch[1]) {
-            suggestedFilename = filenameMatch[1].replace(/['"]/g, '');
-          }
-        }   
-        if (!suggestedFilename) {
-          suggestedFilename = fileUrl.split('/').pop();
-        }   
-        return response.blob().then(blob => ({ blob, suggestedFilename }));
+        return response.json();
       })
-      .then(({ blob, suggestedFilename }) => {
-        const url = window.URL.createObjectURL(blob);
+      .then(({ signedUrl }) => {
         const a = document.createElement('a');
         a.style.display = 'none';
-        a.href = url;
-        a.download = suggestedFilename;
+        a.href = signedUrl;
+        a.target = '_blank';
         document.body.appendChild(a);
         a.click();
+        
         setTimeout(() => {
-          window.URL.revokeObjectURL(url);
           document.body.removeChild(a);
         }, 100);
       })
       .catch(error => {
         toast.error('Dosya indirilemedi');
       });
+  };
+  
+  const handlePreview = (fileUrl) => {
+    setModalVisible(true);
+    setModalFileUrl(fileUrl);
+  };
+
+  const handleCloseModal = () => {
+    setModalVisible(false);
+    setModalFileUrl('');
   };
 
   const recalculatePoints = async () => {
@@ -347,7 +349,7 @@ const ApplicationDetails = ({ applicationId, onBack }) => {
                               <th>Jüri Üyesi</th>
                               <th>Sonuç</th>
                               <th>Değerlendirme Tarihi</th>
-                              <th>Rapor</th>
+                              <th>İşlemler</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -364,16 +366,23 @@ const ApplicationDetails = ({ applicationId, onBack }) => {
                                 <td>{formatDate(evaluation.evaluatedAt)}</td>
                                 <td>
                                   {evaluation.reportFileUrl ? (
-                                    <Button 
-                                      variant='outline-success' 
-                                      size='sm'
-                                      onClick={() => {
-                                        const fileName = evaluation.reportFileUrl.split('/').pop();
-                                        downloadFile(fileName);
-                                      }}
-                                    >
-                                      <FaDownload className="me-1" /> İndir
-                                    </Button>
+                                    <div className="d-flex">
+                                      <Button 
+                                        variant='outline-success' 
+                                        size='sm'
+                                        className='me-1'
+                                        onClick={() => downloadFile(evaluation.reportFileUrl)}
+                                      >
+                                        <FaDownload /> 
+                                      </Button>
+                                      <Button 
+                                        variant='outline-success' 
+                                        size='sm'
+                                        onClick={() => handlePreview(evaluation.reportFileUrl)}
+                                      >
+                                        <FaEye /> 
+                                      </Button>
+                                    </div>
                                   ) : (
                                     <Badge bg="secondary">Rapor Yok</Badge>
                                   )}
@@ -535,7 +544,7 @@ const ApplicationDetails = ({ applicationId, onBack }) => {
                     <tr>
                       <th>Belge Adı</th>
                       <th>Yükleme Tarihi</th>
-                      <th>İşlem</th>
+                      <th>İşlemler</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -544,15 +553,23 @@ const ApplicationDetails = ({ applicationId, onBack }) => {
                         <td>{doc.type}</td>
                         <td>{formatDate(doc.uploadedAt)}</td>
                         <td>
-                        <Button 
-                        variant="outline-success" 
-                        size="sm"
-                        onClick={() => {
-                          downloadFile(doc.fileUrl)
-                        }}
-                        >
-                          <FaDownload className="me-1" /> İndir
-                        </Button>
+                          <div className="d-flex">
+                            <Button 
+                              variant="outline-success" 
+                              size="sm"
+                              className="me-1"
+                              onClick={() => downloadFile(doc.fileUrl)}
+                            >
+                              <FaDownload /> 
+                            </Button>
+                            <Button 
+                              variant="outline-success" 
+                              size="sm"
+                              onClick={() => handlePreview(doc.fileUrl)}
+                            >
+                              <FaEye /> 
+                            </Button>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -565,6 +582,13 @@ const ApplicationDetails = ({ applicationId, onBack }) => {
           </Tabs>
         </Card.Body>
       </Card>
+      
+      {isModalVisible && (
+        <PreviewModal
+          fileUrl={modalFileUrl}
+          onClose={handleCloseModal}
+        />
+      )}
     </Container>
   );
 };

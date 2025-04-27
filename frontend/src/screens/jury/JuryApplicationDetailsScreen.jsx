@@ -6,11 +6,12 @@ import {
   useEvaluateApplicationMutation,
   useUpdateEvaluationMutation
 } from '../../slices/juryApiSlice';
-import { FaInfo, FaFile, FaDownload, FaEdit } from 'react-icons/fa';
+import { FaInfo, FaFile, FaDownload, FaEdit, FaEye } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import { useSelector } from 'react-redux';
 import Loader from '../../components/common/Loader';
 import BackButton from '../../components/common/BackButton';
+import PreviewModal from '../../components/common/PreviewModal';
 
 const JuryApplicationDetailsScreen = () => {
   const { applicationId } = useParams();
@@ -24,6 +25,9 @@ const JuryApplicationDetailsScreen = () => {
   const [existingResult, setExistingResult] = useState('');
   const [reportFile, setReportFile] = useState(null);
   const [reportFileName, setReportFileName] = useState('');
+  
+  const [isModalVisible, setModalVisible] = useState(false);
+  const [modalFileUrl, setModalFileUrl] = useState('');
   
   const { data: application, isLoading, refetch, error } = useGetJuryApplicationDetailsQuery(applicationId);
   const [evaluateApplication, { isLoading: isEvaluating }] = useEvaluateApplicationMutation();
@@ -53,41 +57,39 @@ const JuryApplicationDetailsScreen = () => {
 
   const downloadFile = (fileUrl) => {
     const downloadUrl = `/api/applications/download?url=${encodeURIComponent(fileUrl)}`;
+    
     fetch(downloadUrl)
       .then(response => {
         if (!response.ok) {
           throw new Error('Dosya indirilemedi');
         }
-        const contentDisposition = response.headers.get('Content-Disposition');
-        let suggestedFilename = '';
-        
-        if (contentDisposition) {
-          const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
-          if (filenameMatch && filenameMatch[1]) {
-            suggestedFilename = filenameMatch[1].replace(/['"]/g, '');
-          }
-        }
-        if (!suggestedFilename) {
-          suggestedFilename = fileUrl.split('/').pop();
-        }
-        return response.blob().then(blob => ({ blob, suggestedFilename }));
+        return response.json();
       })
-      .then(({ blob, suggestedFilename }) => {
-        const url = window.URL.createObjectURL(blob);
+      .then(({ signedUrl }) => {
         const a = document.createElement('a');
         a.style.display = 'none';
-        a.href = url;
-        a.download = suggestedFilename;
+        a.href = signedUrl;
+        a.target = '_blank';
         document.body.appendChild(a);
         a.click();
+        
         setTimeout(() => {
-          window.URL.revokeObjectURL(url);
           document.body.removeChild(a);
         }, 100);
       })
       .catch(error => {
         toast.error('Dosya indirilemedi');
       });
+  };
+  
+  const handlePreview = (fileUrl) => {
+    setModalVisible(true);
+    setModalFileUrl(fileUrl);
+  };
+
+  const handleCloseModal = () => {
+    setModalVisible(false);
+    setModalFileUrl('');
   };
 
   const handleToggleEdit = () => {
@@ -403,21 +405,37 @@ const JuryApplicationDetailsScreen = () => {
                                     <div className="d-flex align-items-center">
                                         <FaFile className="text-success me-2" />
                                         <span>{reportFileName}</span>
-                                        {application.juryEvaluations?.find(e => e.juryMember._id === userInfo._id)?.reportFileUrl && (
-                                          <Button 
-                                            variant="outline-success" 
-                                            size="sm" 
-                                            className="ms-2"
-                                            onClick={() => {
-                                              const evaluation = application.juryEvaluations.find(e => e.juryMember._id === userInfo._id);
-                                              if (evaluation?.reportFileUrl) {
-                                                downloadFile(evaluation.reportFileUrl);
-                                              }
-                                            }}
-                                          >
-                                            <FaDownload /> İndir
-                                          </Button>
-                                        )}
+                                        <div className="ms-2 d-flex">
+                                          {application.juryEvaluations?.find(e => e.juryMember._id === userInfo._id)?.reportFileUrl && (
+                                            <>
+                                              <Button 
+                                                variant="outline-success" 
+                                                size="sm" 
+                                                className="me-1"
+                                                onClick={() => {
+                                                  const evaluation = application.juryEvaluations.find(e => e.juryMember._id === userInfo._id);
+                                                  if (evaluation?.reportFileUrl) {
+                                                    downloadFile(evaluation.reportFileUrl);
+                                                  }
+                                                }}
+                                              >
+                                                <FaDownload />
+                                              </Button>
+                                              <Button 
+                                                variant="outline-success" 
+                                                size="sm"
+                                                onClick={() => {
+                                                  const evaluation = application.juryEvaluations.find(e => e.juryMember._id === userInfo._id);
+                                                  if (evaluation?.reportFileUrl) {
+                                                    handlePreview(evaluation.reportFileUrl);
+                                                  }
+                                                }}
+                                              >
+                                                <FaEye />
+                                              </Button>
+                                            </>
+                                          )}
+                                        </div>
                                     </div>
                                     </div>
                                 )}
@@ -505,7 +523,7 @@ const JuryApplicationDetailsScreen = () => {
                             </div>
                             
                             <Alert variant='info' className='d-flex align-items-center mb-3'>
-                            <FaInfo className='text-primary me-2' />
+                            <FaInfo className='text-success me-2' />
                             <div>
                                 {hasExistingEvaluation 
                                 ? 'Değerlendirmenizi güncelleyebilirsiniz.' 
@@ -682,7 +700,7 @@ const JuryApplicationDetailsScreen = () => {
                     <tr>
                       <th>Belge Adı</th>
                       <th>Yükleme Tarihi</th>
-                      <th>İşlem</th>
+                      <th>İşlemler</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -691,15 +709,23 @@ const JuryApplicationDetailsScreen = () => {
                         <td>{doc.type}</td>
                         <td>{new Date(doc.uploadedAt).toLocaleDateString('tr-TR')}</td>
                         <td>
-                        <Button 
-                        variant="outline-success" 
-                        size="sm"
-                        onClick={() => {
-                          downloadFile(doc.fileUrl);
-                        }}
-                        >
-                          <FaDownload className="me-1" /> İndir
-                        </Button>
+                          <div className="d-flex">
+                            <Button 
+                              variant="outline-success" 
+                              size="sm"
+                              className="me-1"
+                              onClick={() => downloadFile(doc.fileUrl)}
+                            >
+                              <FaDownload />
+                            </Button>
+                            <Button 
+                              variant="outline-success" 
+                              size="sm"
+                              onClick={() => handlePreview(doc.fileUrl)}
+                            >
+                              <FaEye />
+                            </Button>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -712,6 +738,13 @@ const JuryApplicationDetailsScreen = () => {
           </Tabs>
         </Card.Body>
       </Card>
+
+      {isModalVisible && (
+        <PreviewModal
+          fileUrl={modalFileUrl}
+          onClose={handleCloseModal}
+        />
+      )}
     </Container>
   );
 };

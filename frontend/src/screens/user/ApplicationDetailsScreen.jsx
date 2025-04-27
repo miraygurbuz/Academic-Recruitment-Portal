@@ -1,6 +1,7 @@
-import { Container, Card, Row, Col, Table, Badge, Button, Alert, ListGroup } from 'react-bootstrap';
-import { FaFileAlt, FaUserGraduate, FaBook, FaProjectDiagram, FaQuoteRight, FaFilePdf, FaFileWord, FaFileImage, FaFile, FaDownload } from 'react-icons/fa';
+import { Container, Card, Row, Col, Table, Badge, Button, Alert } from 'react-bootstrap';
+import { FaFileAlt, FaEye, FaUserGraduate, FaBook, FaProjectDiagram, FaQuoteRight, FaFilePdf, FaFileWord, FaFileImage, FaFile, FaDownload } from 'react-icons/fa';
 import { useParams } from 'react-router-dom';
+import { useState } from 'react';
 import { useGetApplicationByIdQuery } from '../../slices/applicationsApiSlice';
 import { useGetJobByIdQuery } from '../../slices/jobsApiSlice';
 import { useGetFacultyByIdQuery, useGetDepartmentByIdQuery } from '../../slices/fieldsApiSlice';
@@ -8,6 +9,7 @@ import Loader from '../../components/common/Loader';
 import BackButton from '../../components/common/BackButton';
 import { getStatusBadge } from '../../utils/badges';
 import { toast } from 'react-toastify';
+import PreviewModal from '../../components/common/PreviewModal';
 
 const ApplicationDetailsScreen = () => {
   const { id } = useParams();
@@ -55,36 +57,38 @@ const ApplicationDetailsScreen = () => {
     }
   };
 
+  const [isModalVisible, setModalVisible] = useState(false);
+  const [modalFileUrl, setModalFileUrl] = useState('');
+
+  const handlePreview = (fileUrl) => {
+    setModalVisible(true);
+    setModalFileUrl(fileUrl);
+  };
+
+  const handleCloseModal = () => {
+    setModalVisible(false);
+    setModalFileUrl('');
+  };
+
   const downloadFile = (fileUrl) => {
     const downloadUrl = `/api/applications/download?url=${encodeURIComponent(fileUrl)}`;
+    
     fetch(downloadUrl)
       .then(response => {
         if (!response.ok) {
           throw new Error('Dosya indirilemedi');
         }
-        const contentDisposition = response.headers.get('Content-Disposition');
-        let suggestedFilename = '';
-        if (contentDisposition) {
-          const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
-          if (filenameMatch && filenameMatch[1]) {
-            suggestedFilename = filenameMatch[1].replace(/['"]/g, '');
-          }
-        }
-        if (!suggestedFilename) {
-          suggestedFilename = fileUrl.split('/').pop();
-        }  
-        return response.blob().then(blob => ({ blob, suggestedFilename }));
+        return response.json();
       })
-      .then(({ blob, suggestedFilename }) => {
-        const url = window.URL.createObjectURL(blob);
+      .then(({ signedUrl }) => {
         const a = document.createElement('a');
         a.style.display = 'none';
-        a.href = url;
-        a.download = suggestedFilename;
+        a.href = signedUrl;
+        a.target = '_blank';
         document.body.appendChild(a);
         a.click();
+        
         setTimeout(() => {
-          window.URL.revokeObjectURL(url);
           document.body.removeChild(a);
         }, 100);
       })
@@ -92,7 +96,7 @@ const ApplicationDetailsScreen = () => {
         toast.error('Dosya indirilemedi');
       });
   };
-
+  
   if (isLoadingApplication) return <Loader />;
 
   if (isApplicationError) return (
@@ -214,8 +218,16 @@ const ApplicationDetailsScreen = () => {
                           onClick={() => {
                             downloadFile(doc.fileUrl);
                           }}
+                          className="me-2"
                         >
                           <FaDownload className="me-1" /> İndir
+                        </Button>
+                        <Button 
+                          variant="outline-success" 
+                          size="sm"
+                          onClick={() => handlePreview(doc.fileUrl)}
+                        >
+                          <FaEye className="me-1" /> Görüntüle
                         </Button>
                       </div>
                     </Card.Body>
@@ -316,6 +328,13 @@ const ApplicationDetailsScreen = () => {
           )}
         </Card.Body>
       </Card>
+      
+      {isModalVisible && (
+        <PreviewModal
+          fileUrl={modalFileUrl}
+          onClose={handleCloseModal}
+        />
+      )}
     </Container>
   );
 };
