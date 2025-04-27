@@ -55,17 +55,24 @@ const ApplicationDetailsScreen = () => {
     }
   };
 
-  const downloadFile = (filename) => {
-    const downloadUrl = `/api/applications/download-file/${filename}`;
+  const downloadFile = (fileUrl) => {
+    const downloadUrl = `/api/applications/download?url=${encodeURIComponent(fileUrl)}`;
     fetch(downloadUrl)
       .then(response => {
         if (!response.ok) {
           throw new Error('Dosya indirilemedi');
         }
-        const suggestedFilename = response.headers
-          .get('Content-Disposition')
-          ?.split('filename=')[1]
-          ?.replace(/"/g, '') || filename;
+        const contentDisposition = response.headers.get('Content-Disposition');
+        let suggestedFilename = '';
+        if (contentDisposition) {
+          const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+          if (filenameMatch && filenameMatch[1]) {
+            suggestedFilename = filenameMatch[1].replace(/['"]/g, '');
+          }
+        }
+        if (!suggestedFilename) {
+          suggestedFilename = fileUrl.split('/').pop();
+        }  
         return response.blob().then(blob => ({ blob, suggestedFilename }));
       })
       .then(({ blob, suggestedFilename }) => {
@@ -76,8 +83,10 @@ const ApplicationDetailsScreen = () => {
         a.download = suggestedFilename;
         document.body.appendChild(a);
         a.click();
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
+        setTimeout(() => {
+          window.URL.revokeObjectURL(url);
+          document.body.removeChild(a);
+        }, 100);
       })
       .catch(error => {
         toast.error('Dosya indirilemedi');
@@ -200,25 +209,24 @@ const ApplicationDetailsScreen = () => {
                       </Card.Text>
                       <div className="mt-3">
                         <Button 
-                        variant="outline-success" 
-                        size="sm"
-                        onClick={() => {
-                          const fileName = doc.fileUrl.split('/').pop().split('\\').pop();
-                          downloadFile(fileName);
-                        }}
+                          variant="outline-success" 
+                          size="sm"
+                          onClick={() => {
+                            downloadFile(doc.fileUrl);
+                          }}
                         >
                           <FaDownload className="me-1" /> İndir
                         </Button>
                       </div>
-            </Card.Body>
-          </Card>
-        </Col>
-      ))}
-    </Row>
-  ) : (
-    <Alert variant="warning">Belge yüklenmemiş.</Alert>
-  )}
-</Card.Body>
+                    </Card.Body>
+                  </Card>
+                </Col>
+              ))}
+            </Row>
+          ) : (
+            <Alert variant="warning">Belge yüklenmemiş.</Alert>
+          )}
+        </Card.Body>
       </Card>
       
       <Card className="mb-4 shadow-sm">

@@ -22,17 +22,25 @@ const ApplicationDetails = ({ applicationId, onBack }) => {
   const { refetch: refetchPoints } = useCalculateApplicationPointsQuery(id);
   const { refetch: refetchCriteria } = useCheckApplicationCriteriaQuery(id);
 
-  const downloadFile = (filename) => {
-    const downloadUrl = `/api/applications/download-file/${filename}`;
+  const downloadFile = (fileUrl) => {
+    const downloadUrl = `/api/applications/download?url=${encodeURIComponent(fileUrl)}`;
     fetch(downloadUrl)
       .then(response => {
         if (!response.ok) {
           throw new Error('Dosya indirilemedi');
         }
-        const suggestedFilename = response.headers
-          .get('Content-Disposition')
-          ?.split('filename=')[1]
-          ?.replace(/"/g, '') || filename;
+        const contentDisposition = response.headers.get('Content-Disposition');
+        let suggestedFilename = '';
+        
+        if (contentDisposition) {
+          const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+          if (filenameMatch && filenameMatch[1]) {
+            suggestedFilename = filenameMatch[1].replace(/['"]/g, '');
+          }
+        }   
+        if (!suggestedFilename) {
+          suggestedFilename = fileUrl.split('/').pop();
+        }   
         return response.blob().then(blob => ({ blob, suggestedFilename }));
       })
       .then(({ blob, suggestedFilename }) => {
@@ -43,8 +51,10 @@ const ApplicationDetails = ({ applicationId, onBack }) => {
         a.download = suggestedFilename;
         document.body.appendChild(a);
         a.click();
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
+        setTimeout(() => {
+          window.URL.revokeObjectURL(url);
+          document.body.removeChild(a);
+        }, 100);
       })
       .catch(error => {
         toast.error('Dosya indirilemedi');
@@ -538,8 +548,7 @@ const ApplicationDetails = ({ applicationId, onBack }) => {
                         variant="outline-success" 
                         size="sm"
                         onClick={() => {
-                          const fileName = doc.fileUrl.split('/').pop().split('\\').pop();
-                          downloadFile(fileName);
+                          downloadFile(doc.fileUrl)
                         }}
                         >
                           <FaDownload className="me-1" /> İndir

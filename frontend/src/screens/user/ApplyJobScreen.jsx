@@ -56,7 +56,6 @@ const ApplyJobScreen = () => {
     ]
   });
 
-  const [uploadedFiles, setUploadedFiles] = useState([]);
   const [fileInfos, setFileInfos] = useState([]);
 
   const addPublication = () => {
@@ -144,30 +143,26 @@ const ApplyJobScreen = () => {
     updatedTheses.splice(index, 1);
     setFormData(prev => ({ ...prev, theses: updatedTheses }));
   };
-  
-const handleFileUpload = (e) => {
-  const selectedFiles = Array.from(e.target.files);
 
-  const updatedInfos = selectedFiles.map(file => {  
-    return {
-      name: file.name,
-      size: file.size,
-      file: file,
-    };
-  });
+  const handleFileUpload = (e) => {
+    const selectedFiles = Array.from(e.target.files);
 
-  setFileInfos(prev => [...prev, ...updatedInfos]);
-};
-  
+    const updatedInfos = selectedFiles.map(file => {  
+      return {
+        name: file.name,
+        size: file.size,
+        file: file,
+        type: file.name.split('.')[0]
+      };
+    });
+
+    setFileInfos(prev => [...prev, ...updatedInfos]);
+  };
   
   const removeFile = (index) => {
     const updatedFileInfos = [...fileInfos];
     updatedFileInfos.splice(index, 1);
     setFileInfos(updatedFileInfos);
-    
-    const updatedFiles = [...uploadedFiles];
-    updatedFiles.splice(index, 1);
-    setUploadedFiles(updatedFiles);
   };
   
   const handleChange = (e, section, field, index = null) => {

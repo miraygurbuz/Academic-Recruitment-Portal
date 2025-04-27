@@ -1,45 +1,41 @@
 import asyncHandler from 'express-async-handler';
-import path from 'path';
-import fs from 'fs';
-import { fileURLToPath } from 'url';
-import { dirname } from 'path';
+import { GetObjectCommand } from '@aws-sdk/client-s3';
+import s3Client, { s3Config } from '../config/s3Config.js';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+export const downloadFile = asyncHandler(async (req, res) => {
+  try {
+    const fileUrl = decodeURIComponent(req.query.url);
 
-export const downloadFile = asyncHandler(async (req, res, next) => {
-  const filename = req.params.filename;
-  const uploadsDir = path.join(__dirname, '..', 'uploads');
-  const filePath = path.join(uploadsDir, filename);
+    if (!fileUrl) {
+      return res.status(400).json({ error: 'Dosya URL\'i gereklidir' });
+    }
 
-  if (!fs.existsSync(filePath)) {
-    return res.status(404).send('Dosya bulunamadı');
+    let key = '';
+    try {
+      const urlObj = new URL(fileUrl);
+      key = urlObj.pathname.substring(1);
+    } catch (e) {
+      key = fileUrl.split('/').pop();
+    }
+
+    const command = new GetObjectCommand({
+      Bucket: s3Config.bucketName,
+      Key: key
+    });
+    
+    const response = await s3Client.send(command);
+
+    const contentType = response.ContentType || 'application/octet-stream';
+    const filename = key.split('/').pop();
+
+    res.setHeader('Content-Type', contentType);
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    
+    response.Body.pipe(res);
+  } catch (error) {
+    return res.status(500).json({
+      error: 'Dosya indirme hatası',
+      message: error.message
+    });
   }
-
-  const ext = path.extname(filename).toLowerCase();
-  let contentType = 'application/octet-stream';
-
-  const mimeTypes = {
-    '.pdf': 'application/pdf',
-    '.doc': 'application/msword',
-    '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    '.jpg': 'image/jpeg',
-    '.jpeg': 'image/jpeg',
-    '.png': 'image/png'
-  };
-
-  if (mimeTypes[ext]) {
-    contentType = mimeTypes[ext];
-  }
-
-  res.setHeader('Content-Type', contentType);
-  res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-
-  const fileStream = fs.createReadStream(filePath);
-
-  fileStream.on('error', (error) => {
-    res.status(500).send('Dosya okunamadı');
-  });
-
-  fileStream.pipe(res);
 });
