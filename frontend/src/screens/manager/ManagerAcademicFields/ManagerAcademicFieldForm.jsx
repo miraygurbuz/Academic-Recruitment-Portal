@@ -265,7 +265,7 @@ const AcademicFieldEditForm = () => {
                           {PUBLICATION_CATEGORIES.map(category => (
                             <tr key={category.value}>
                               <td>{category.value}</td>
-                              <td>{category.label.split('- ')[1]}</td>
+                              <td>{category.label}</td>
                               <td>
                                 <Form.Control
                                   type='number'
@@ -293,7 +293,7 @@ const AcademicFieldEditForm = () => {
                           {CITATION_CATEGORIES.map(category => (
                             <tr key={category.value}>
                               <td>{category.value}</td>
-                              <td>{category.label.split('- ')[1]}</td>
+                              <td>{category.label}</td>
                               <td>
                                 <Form.Control
                                   type='number'
@@ -321,7 +321,7 @@ const AcademicFieldEditForm = () => {
                           {THESIS_CATEGORIES.map(category => (
                             <tr key={category.value}>
                               <td>{category.value}</td>
-                              <td>{category.label.split('- ')[1]}</td>
+                              <td>{category.label}</td>
                               <td>
                                 <Form.Control
                                   type='number'
@@ -350,7 +350,7 @@ const AcademicFieldEditForm = () => {
                             {PROJECT_CATEGORIES.map(category => (
                               <tr key={category.value}>
                                 <td>{category.value}</td>
-                                <td>{category.label.split('- ')[1]}</td>
+                                <td>{category.label}</td>
                                 <td>
                                   <Form.Control
                                     type='number'

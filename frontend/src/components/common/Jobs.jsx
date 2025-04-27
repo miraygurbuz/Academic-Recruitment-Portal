@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaArrowRight, FaInfoCircle, FaCalendarAlt, FaUniversity, FaGraduationCap, FaCheck } from 'react-icons/fa';
-import { Container, Card, Button, Badge, Alert, Row, Col } from 'react-bootstrap';
+import { FaArrowRight, FaInfoCircle, FaCalendarAlt, FaUniversity, FaGraduationCap, FaCheck, FaFilter } from 'react-icons/fa';
+import { Container, Card, Button, Badge, Alert, Row, Col, Form, InputGroup } from 'react-bootstrap';
 import { useGetActiveJobsQuery } from '../../slices/jobsApiSlice';
 import { useGetMyApplicationsQuery } from '../../slices/applicationsApiSlice';
 import { useSelector } from 'react-redux';
@@ -11,6 +11,7 @@ import Loader from './Loader';
 const Jobs = () => {
     const navigate = useNavigate();
     const [currentPage, setCurrentPage] = useState(1);
+    const [selectedDepartment, setSelectedDepartment] = useState('');
     const itemsPerPage = 6;
     
     const { userInfo } = useSelector((state) => state.auth);
@@ -30,7 +31,21 @@ const Jobs = () => {
         }
     }, [myApplications, userInfo]);
     
-    const totalPages = jobs ? Math.ceil(jobs.length / itemsPerPage) : 0;
+    const departments = useMemo(() => {
+        if (!jobs) return [];
+        const uniqueDepartments = new Set(jobs.map(job => job.department.name));
+        return Array.from(uniqueDepartments).sort();
+    }, [jobs]);
+    
+    // Filter jobs by department
+    const filteredJobs = useMemo(() => {
+        if (!jobs) return [];
+        return selectedDepartment 
+            ? jobs.filter(job => job.department.name === selectedDepartment)
+            : jobs;
+    }, [jobs, selectedDepartment]);
+    
+    const totalPages = filteredJobs ? Math.ceil(filteredJobs.length / itemsPerPage) : 0;
 
     const handlePageChange = (newPage) => {
         if (newPage >= 1 && newPage <= totalPages) {
@@ -39,7 +54,7 @@ const Jobs = () => {
     };
 
     const startIndex = (currentPage - 1) * itemsPerPage;
-    const currentJobs = jobs ? jobs.slice(startIndex, startIndex + itemsPerPage) : [];
+    const currentJobs = filteredJobs ? filteredJobs.slice(startIndex, startIndex + itemsPerPage) : [];
     
     const handleApply = (jobId) => {
         navigate(`/jobs/${jobId}/apply`);
@@ -66,6 +81,11 @@ const Jobs = () => {
         return appliedJobIds.has(jobId);
     };
 
+    const handleDepartmentChange = (e) => {
+        setSelectedDepartment(e.target.value);
+        setCurrentPage(1);
+    };
+
     if (jobsLoading) {
         return <Loader />;
     }
@@ -86,9 +106,29 @@ const Jobs = () => {
             <div className='text-center mb-4'>
                 <h2>Akademik İlanlar</h2>
                 <p className='text-muted small'>
-                    {jobs?.length || 0} aktif ilan bulunmaktadır
+                    {filteredJobs?.length || 0} aktif ilan bulunmaktadır
                 </p>
             </div>
+            
+            <Row className='mb-4'>
+                <Col md={6} className='mx-auto'>
+                    <InputGroup>
+                        <InputGroup.Text><FaFilter /></InputGroup.Text>
+                        <Form.Select 
+                            value={selectedDepartment} 
+                            onChange={handleDepartmentChange}
+                            aria-label="Bölüm Seçin"
+                        >
+                            <option value="">Tüm Bölümler</option>
+                            {departments.map(dept => (
+                                <option key={dept} value={dept}>
+                                    {dept}
+                                </option>
+                            ))}
+                        </Form.Select>
+                    </InputGroup>
+                </Col>
+            </Row>
             
             <Row xs={1} md={2} lg={3} className='g-4 mb-4'>
                 {currentJobs.map((job) => {
@@ -176,11 +216,13 @@ const Jobs = () => {
             
             {currentJobs.length === 0 && (
                 <Alert variant='info' className='text-center'>
-                    Aktif ilan bulunmamaktadır.
+                    {selectedDepartment 
+                        ? `${selectedDepartment} bölümünde aktif ilan bulunmamaktadır.`
+                        : 'Aktif ilan bulunmamaktadır.'}
                 </Alert>
             )}
             
-            {jobs && jobs.length > itemsPerPage && (
+            {filteredJobs && filteredJobs.length > itemsPerPage && (
                 <div className='d-flex justify-content-center mt-4'>
                     <Pager 
                         currentPage={currentPage}
