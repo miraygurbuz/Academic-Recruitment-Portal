@@ -1,5 +1,5 @@
 import { Navbar, Nav, NavDropdown, Container } from 'react-bootstrap';
-import { FaSignInAlt, FaUserPlus, FaUser, FaClipboardList, FaSignOutAlt, FaBell } from 'react-icons/fa';
+import { FaSignInAlt, FaUserPlus, FaUser, FaClipboardList, FaSignOutAlt, FaBriefcase } from 'react-icons/fa';
 import { useSelector, useDispatch } from 'react-redux';
 import { Link } from 'react-router-dom';
 import { useLogoutMutation } from '../../../slices/usersApiSlice';
@@ -51,7 +51,7 @@ const Header = () => {
                                     </Nav.Link>
                                     <Nav.Link as={Link} to='/my-applications' className='nav-link-user mx-2 d-flex align-items-center'>
                                         <div className="nav-icon-container me-2">
-                                            <FaSignInAlt />
+                                            <FaBriefcase />
                                         </div>
                                         <span>Başvurularım</span>
                                     </Nav.Link>

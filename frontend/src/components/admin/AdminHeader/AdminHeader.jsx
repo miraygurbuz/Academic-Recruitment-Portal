@@ -1,5 +1,5 @@
 import { Navbar, Nav, NavDropdown, Container } from 'react-bootstrap';
-import { FaFileSignature, FaLandmark, FaSignOutAlt, FaUser, FaHome, FaUsers, FaClipboardList, FaSchool } from 'react-icons/fa';
+import { FaLandmark, FaSignOutAlt, FaUser, FaHome, FaUsers, FaClipboardList, FaBriefcase } from 'react-icons/fa';
 import { useSelector, useDispatch } from 'react-redux';
 import { Link } from 'react-router-dom';
 import { useLogoutMutation, useGetUserProfileQuery } from '../../../slices/usersApiSlice';
@@ -63,13 +63,13 @@ const AdminHeader = () => {
                             </Nav.Link>
                             <Nav.Link as={Link} to='/admin/applications' className='nav-link-admin mx-2 d-flex align-items-center'>
                                 <div className="nav-icon-container me-2">
-                                    <FaClipboardList />
+                                    <FaBriefcase />
                                 </div>
                                 <span>Başvurular</span>
                             </Nav.Link>
                             <Nav.Link as={Link} to='/admin/jobs' className='nav-link-admin mx-2 d-flex align-items-center'>
                                 <div className="nav-icon-container me-2">
-                                    <FaFileSignature />
+                                    <FaClipboardList />
                                 </div>
                                 <span>İlanlar</span>
                             </Nav.Link>

@@ -26,7 +26,7 @@ const ManagerApplicationPDFScreen = () => {
   const openPrintWindow = (showPdfGuidance = false) => {
     const printWindow = window.open('', '_blank', 'left=200,top=200,width=900,height=900');
     
-    printWindow.document.write('<html><head><title>Akademik Değerlendirme Formu</title>');
+    printWindow.document.write('<html><head><title>Değerlendirme Formu</title>');
     printWindow.document.write('<style>');
     printWindow.document.write(`
       body { font-family: Arial, sans-serif; padding: 20px; }
@@ -160,7 +160,7 @@ const ManagerApplicationPDFScreen = () => {
   return (
     <Container className='py-4'>
       <div className='mb-4 d-flex justify-content-between align-items-center'>
-        <h1 className='h4 fw-bold'>Akademik Değerlendirme Formu (Tablo 5)</h1>
+        <h1 className='h4 fw-bold'>Değerlendirme Formu (Tablo 5)</h1>
         <div>
           <Button variant='secondary' className='me-2' onClick={handleBack}>
             <FaArrowLeft className='me-1' /> Geri

@@ -1,5 +1,5 @@
 import { Navbar, Nav, NavDropdown, Container } from 'react-bootstrap';
-import { FaFileSignature, FaSignOutAlt, FaUser, FaHome, FaUsers, FaClipboardList } from 'react-icons/fa';
+import { FaFileSignature, FaSignOutAlt, FaUser, FaHome, FaUsers, FaBriefcase } from 'react-icons/fa';
 import { useSelector, useDispatch } from 'react-redux';
 import { Link } from 'react-router-dom';
 import { useLogoutMutation, useGetUserProfileQuery } from '../../../slices/usersApiSlice';
@@ -62,7 +62,7 @@ const ManagerHeader = () => {
                             </Nav.Link>
                             <Nav.Link as={Link} to='/manager/applications' className='nav-link-manager mx-2 d-flex align-items-center'>
                                 <div className="nav-icon-container me-2">
-                                    <FaClipboardList />
+                                    <FaBriefcase />
                                 </div>
                                 <span>Başvurular</span>
                             </Nav.Link>

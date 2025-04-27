@@ -64,7 +64,7 @@ const JuryHeader = () => {
                                 <div className="nav-icon-container me-2">
                                     <FaClipboardList />
                                 </div>
-                                <span>Atanan İlanlar</span>
+                                <span>İlanlar</span>
                             </Nav.Link>
                       
                             <div className="vertical-divider d-none d-lg-block"></div>

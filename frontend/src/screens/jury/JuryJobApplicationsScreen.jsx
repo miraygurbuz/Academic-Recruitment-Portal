@@ -7,6 +7,8 @@ import Loader from '../../components/common/Loader';
 import Pager from '../../components/common/Pager/Pager';
 import BackButton from '../../components/common/BackButton';
 import { useGetJobByIdQuery } from '../../slices/jobsApiSlice';
+import { getPositionBadge } from '../../utils/badges';
+import { formatDate } from '../../utils/helpers';
 
 const JuryJobApplicationsScreen = () => {
   const { jobId } = useParams();
@@ -60,10 +62,22 @@ const JuryJobApplicationsScreen = () => {
 
   return (
     <Container fluid className='mt-4 mb-5'>
-      <div className='text-center mb-4'>
-        <h1 className='h2'>"{job?.title}" İlanına Ait Başvurular</h1>
-      </div>
-      
+        <div className='text-center'>
+          <h1 className='h2'>İlan Başvuruları</h1>
+          <p className='lead'>
+            {job ? job.title : 'İlan ID: ' + jobId}
+          </p>
+          {job && (
+            <div className='d-flex justify-content-center gap-3 text-muted'>
+              <span>{job.department?.name || 'Bölüm belirtilmemiş'}</span>
+              <span>•</span>
+              <span>{getPositionBadge(job.position)}</span>
+              <span>•</span>
+              <span>Son Başvuru: {formatDate(job.endDate)}</span>
+            </div>
+          )}
+        </div>
+        <br />
       <Card>
         <Card.Header>
           <Row className='align-items-center'>

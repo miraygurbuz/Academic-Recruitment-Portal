@@ -187,7 +187,7 @@ const ManagerAssignJuryScreen = () => {
           <Button variant='secondary' onClick={() => setShowResetModal(false)}>
             İptal
           </Button>
-          <Button variant='primary' onClick={handleResetJury}>
+          <Button variant='success' onClick={handleResetJury}>
             Evet, Seçimi Temizle
           </Button>
         </Modal.Footer>
@@ -202,7 +202,7 @@ const ManagerAssignJuryScreen = () => {
       <Card className='shadow-sm'>
         <Card.Body>
           <Form onSubmit={handleSubmit}>
-            <div className='d-flex justify-content-between align-items-center mb-4'>
+            <div className='d-flex justify-content-center align-items-center mb-4'>
               <p className='lead mb-0'>
                 Lütfen jüri üyelerini seçiniz
                 <Badge pill bg='dark' className='ms-2'>
