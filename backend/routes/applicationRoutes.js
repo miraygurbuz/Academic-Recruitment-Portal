@@ -15,13 +15,13 @@ import {
     evaluateApplication,
     updateEvaluation,
 } from '../controllers/applicationController.js';
-import { protect, admin, jury, downloadAuth } from '../middleware/authMiddleware.js';
+import { protect, admin, jury } from '../middleware/authMiddleware.js';
 import upload from '../middleware/uploadMiddleware.js';
 import { downloadFile } from '../middleware/downloadMiddleware.js';
 
 const router = express.Router();
 
-router.get('/download-file/:filename', protect, downloadAuth, downloadFile);
+router.get('/download', protect, downloadFile);
 
 router.post('/', protect, upload.array('documents', 10), createApplication);
 router.put('/:id', protect, upload.array('documents', 10), updateApplication);

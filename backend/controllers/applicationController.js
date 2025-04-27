@@ -4,6 +4,7 @@ import mongoose from 'mongoose';
 import Job from '../models/jobModel.js';
 import path from 'path';
 import { createNotification } from '../services/notificationService.js';
+import { uploadToS3 } from '../services/cloudStorageService.js';
 
 // @route   POST /api/applications
 // @access  Private
@@ -49,14 +50,25 @@ const createApplication = asyncHandler(async (req, res) => {
 
   const uploadedDocuments = [];
   if (req.files && req.files.length > 0) {
-    req.files.forEach(file => {
-      uploadedDocuments.push({
-        type: path.basename(file.originalname, path.extname(file.originalname)),
-        fileUrl: `/uploads/${file.filename}`,
-        originalName: file.originalname,
-        uploadedAt: new Date()
-      });
-    });
+    for (const file of req.files) {
+      try {
+        const fileUrl = await uploadToS3(
+          file.buffer, 
+          file.originalname, 
+          file.mimetype
+        );
+        
+        uploadedDocuments.push({
+          type: path.basename(file.originalname, path.extname(file.originalname)),
+          fileUrl: fileUrl,
+          originalName: file.originalname,
+          uploadedAt: new Date()
+        });
+      } catch (error) {
+        res.status(500);
+        throw new Error('Dosya yüklenirken bir hata oluştu');
+      }
+    }
   }
 
   const validPublications = Array.isArray(publications)
@@ -529,10 +541,21 @@ const evaluateApplication = asyncHandler(async (req, res) => {
   
   let reportData = {};
   if (req.file) {
-    reportData = {
-      reportFileUrl: `/uploads/${req.file.filename}`,
-      reportOriginalName: req.file.originalname
-    };
+    try {
+      const fileUrl = await uploadToS3(
+        req.file.buffer,
+        req.file.originalname,
+        req.file.mimetype
+      );
+      
+      reportData = {
+        reportFileUrl: fileUrl,
+        reportOriginalName: req.file.originalname
+      };
+    } catch (error) {
+      res.status(500);
+      throw new Error('Rapor yüklenirken bir hata oluştu');
+    }
   }
   
   application.juryEvaluations.push({
@@ -609,8 +632,19 @@ const updateEvaluation = asyncHandler(async (req, res) => {
   application.juryEvaluations[evaluationIndex].updatedAt = Date.now();
   
   if (req.file) {
-    application.juryEvaluations[evaluationIndex].reportFileUrl = `/uploads/${req.file.filename}`;
-    application.juryEvaluations[evaluationIndex].reportOriginalName = req.file.originalname;
+    try {
+      const fileUrl = await uploadToS3(
+        req.file.buffer,
+        req.file.originalname,
+        req.file.mimetype
+      );
+      
+      application.juryEvaluations[evaluationIndex].reportFileUrl = fileUrl;
+      application.juryEvaluations[evaluationIndex].reportOriginalName = req.file.originalname;
+    } catch (error) {
+      res.status(500);
+      throw new Error('Rapor güncellenirken bir hata oluştu');
+    }
   }
   
   await application.save();
