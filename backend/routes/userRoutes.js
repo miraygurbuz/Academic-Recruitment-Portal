@@ -1,15 +1,15 @@
 import express from 'express';
 const router = express.Router();
 import {
-    authUser,
-    registerUser,
-    logoutUser,
-    getUserProfile,
-    updateUserProfile,
-    getUserCount,
-    getUsers,
-    updateUserRole,
-    getJuryMembersByDepartment
+  authUser,
+  registerUser,
+  logoutUser,
+  getUserProfile,
+  updateUserProfile,
+  getUserCount,
+  getUsers,
+  updateUserRole,
+  getJuryMembersByDepartment
 } from '../controllers/userController.js';
 
 import { protect, admin } from '../middleware/authMiddleware.js';

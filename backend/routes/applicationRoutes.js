@@ -1,19 +1,19 @@
 import express from 'express';
 import {
-    createApplication,
-    getMyApplications,
-    getAllApplications,
-    getApplicationById,
-    calculateApplicationPoints,
-    checkApplicationCriteria,
-    getJobApplications,
-    getPendingApplicationCount,
-    deleteApplication,
-    updateApplication,
-    getJuryJobApplications,
-    getApplicationByIdForJury,
-    evaluateApplication,
-    updateEvaluation,
+  createApplication,
+  getMyApplications,
+  getAllApplications,
+  getApplicationById,
+  calculateApplicationPoints,
+  checkApplicationCriteria,
+  getJobApplications,
+  getPendingApplicationCount,
+  deleteApplication,
+  updateApplication,
+  getJuryJobApplications,
+  getApplicationByIdForJury,
+  evaluateApplication,
+  updateEvaluation,
 } from '../controllers/applicationController.js';
 import { protect, admin, jury } from '../middleware/authMiddleware.js';
 import upload from '../middleware/uploadMiddleware.js';
