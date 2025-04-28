@@ -14,7 +14,9 @@
   
 Bu proje, Yazılım Geliştirme Laboratuvarı - II dersi kapsamında akademik personel atama sürecini yönetmek amacıyla geliştirilmiştir.
 Adminlerin ilan oluşturabildiği, adayların başvuru yapabildiği, yöneticilerin süreçleri yönetebildiği ve jüri üyelerinin değerlendirme
-yapabildiği uçtan uca bir sistem sunmak hedeflenmiştir.
+yapabildiği uçtan uca bir sistem sunmak hedeflenmiştir. 
+
+Proje raporuna [buradan](grup28_rapor.pdf) ulaşabilirsiniz.
 
 </div>
 
@@ -127,5 +129,9 @@ npm run dev
 ***Zeynep Yılmaz - 221307012***
 
 ***Hilal Yüce - 221307070***
+
+<a href="https://github.com/miraygurbuz/Academic-Recruitment-Portal/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=miraygurbuz/Academic-Recruitment-Portal" />
+</a>
 
 </div>
