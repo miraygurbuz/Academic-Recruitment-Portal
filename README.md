@@ -124,11 +124,11 @@ npm run dev
   
 ❤️ 
 
-***Miray Gürbüz - 221307031***
+**Miray Gürbüz - 221307031**
   
-***Zeynep Yılmaz - 221307012***
+**Zeynep Yılmaz - 221307012**
 
-***Hilal Yüce - 221307070***
+**Hilal Yüce - 221307070**
 
 <a href="https://github.com/miraygurbuz/Academic-Recruitment-Portal/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=miraygurbuz/Academic-Recruitment-Portal" />
